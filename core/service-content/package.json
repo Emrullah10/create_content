@@ -1,0 +1,12 @@
+{
+  "name": "@create-content/core-service-content",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "@create-content/errors": "*",
+    "@create-content/helper": "*",
+    "axios": "^1.7.2",
+    "puppeteer": "^24.39.1"
+  }
+}

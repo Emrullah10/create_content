@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+build/
+*.log
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+uploads/
+coverage/
+.vscode/launch.json
