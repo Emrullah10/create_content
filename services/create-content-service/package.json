@@ -1,0 +1,23 @@
+{
+  "name": "create-content-service",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node --watch main.js"
+  },
+  "dependencies": {
+    "@create-content/config": "*",
+    "@create-content/core-service-content": "*",
+    "@create-content/datasource": "*",
+    "@create-content/errors": "*",
+    "@create-content/helper": "*",
+    "@create-content/middlewares": "*",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3",
+    "pg": "^8.12.0",
+    "mermaid": "^11.4.0"
+  }
+}

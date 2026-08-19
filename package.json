@@ -1,0 +1,26 @@
+{
+  "name": "create-content-mono-repo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "core/*",
+    "packages/modules/*",
+    "services/*",
+    "create-content-web"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:service": "npm run dev --workspace=create-content-service",
+    "dev:web": "npm run dev --workspace=create-content-web",
+    "build:schema": "node scripts/build-schema.js",
+    "check:nvidia": "node scripts/check-nvidia-models.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js",
+    "test:unit": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js --testPathPattern=unit",
+    "test:integration": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js --testPathPattern=integration",
+    "test:e2e": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js --testPathPattern=e2e"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
