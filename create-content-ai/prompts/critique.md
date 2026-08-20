@@ -20,3 +20,9 @@ condensing. A revised article shorter than the original is a failure.
 Output `notes` (your critique, 3-6 bullet points) and the fully revised `body_markdown` + `summary`.
 Keep all {{DIAGRAM_N}} placeholders intact and in the same meaningful positions unless the section
 around them was restructured.
+Keep at least 3 syntax-highlighted code blocks and the comparison table in the revised article. If
+a code example is buggy or wouldn't run, FIX it in place — do not delete it. Removing a code block
+to save space is the same failure as shortening the article and is not acceptable.
+NEVER invent a statistic to make a claim sound more concrete — only use a number that's grounded
+in the article's own experience notes or example. If you find a fabricated-sounding percentage,
+either remove it or replace it with the qualitative mechanism it was standing in for.

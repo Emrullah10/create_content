@@ -32,6 +32,13 @@ export const makeMermaidRenderer = ({ mermaidJsSource, scale = 2 }) => ({
       await page.setContent(htmlTemplate(mermaidSource, mermaidJsSource), { waitUntil: 'networkidle0' });
       await page.waitForSelector('.mermaid svg', { timeout: 15_000 });
 
+      // Mermaid syntax hatasinda exception atmaz, kirmizi "bomba" hata SVG'si cizer —
+      // waitForSelector bunu da basari sayar, bu yuzden ayrica kontrol etmek gerekiyor.
+      const isError = await page.$eval('.mermaid svg', (svg) =>
+        svg.getAttribute('aria-roledescription') === 'error' || !!svg.querySelector('.error-icon'),
+      );
+      if (isError) throw new Error('mermaid syntax error: renderer produced an error diagram');
+
       const element = await page.$('.mermaid');
       const buffer = await element.screenshot({ type: 'png' });
       return buffer;

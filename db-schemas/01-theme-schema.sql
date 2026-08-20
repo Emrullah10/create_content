@@ -6,6 +6,7 @@ CREATE TABLE themes (
   description     TEXT,
   tags            TEXT[] NOT NULL DEFAULT '{}',
   target_audience VARCHAR(200),
+  expertise_notes TEXT,
   weight          INTEGER NOT NULL DEFAULT 1,
   is_active       BOOLEAN NOT NULL DEFAULT TRUE,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),

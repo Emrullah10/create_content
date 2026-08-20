@@ -17,6 +17,10 @@ class Outline(BaseModel):
     sections: List[str]
     key_points: List[str]
     target_diagrams: List[str]
+    core_thesis: str
+    tradeoffs: List[str]
+    failure_scenarios: List[str]
+    counterpoints: List[str]
 
 
 class Diagram(BaseModel):
@@ -43,8 +47,19 @@ class CritiqueResult(BaseModel):
     summary: str
 
 
+class ExpandResult(BaseModel):
+    body_markdown: str
+    summary: str
+
+
 class QualityReport(BaseModel):
-    score: int
-    reasoning: str
+    technical_depth_reasoning: str
+    technical_depth: int
+    structural_richness_reasoning: str
+    structural_richness: int
+    clarity_reasoning: str
+    clarity: int
+    originality_reasoning: str
+    originality: int
     strengths: List[str]
     weaknesses: List[str]

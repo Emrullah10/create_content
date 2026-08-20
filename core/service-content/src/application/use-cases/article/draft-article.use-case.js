@@ -1,9 +1,12 @@
 import { makeArticle } from '../../../domain/entities/article.js';
 import { slugify } from '@create-content/helper';
 
-export const makeDraftArticle = ({ articleRepo, revisionRepo, assetRepo, aiClient }) => async ({ topic }) => {
-  const outline = await aiClient.generateOutline(topic);
-  const draft = await aiClient.draftArticle(topic, outline);
+export const makeDraftArticle = ({ articleRepo, revisionRepo, assetRepo, themeRepo, aiClient }) => async ({ topic }) => {
+  const theme = await themeRepo.findById(topic.themeId);
+  const expertiseNotes = theme?.expertiseNotes ?? null;
+
+  const outline = await aiClient.generateOutline(topic, expertiseNotes);
+  const draft = await aiClient.draftArticle(topic, outline, expertiseNotes);
 
   const article = makeArticle({
     topicId: topic.id,

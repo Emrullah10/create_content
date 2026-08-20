@@ -1,10 +1,10 @@
 import { toCamel, buildUpdateSet } from '../../helper/row-mapper.js';
 
 export const makeThemeRepository = ({ rawQuery }) => ({
-  create: async ({ name, description, tags = [], targetAudience = null, weight = 1 }) => {
+  create: async ({ name, description, tags = [], targetAudience = null, expertiseNotes = null, weight = 1 }) => {
     const { rows } = await rawQuery(
-      `INSERT INTO themes (name, description, tags, target_audience, weight) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [name, description, tags, targetAudience, weight],
+      `INSERT INTO themes (name, description, tags, target_audience, expertise_notes, weight) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [name, description, tags, targetAudience, expertiseNotes, weight],
     );
     return toCamel(rows[0]);
   },

@@ -38,6 +38,25 @@ def _fill(template: str, **kwargs) -> str:
     return out
 
 
+def _build_experience_context(title: str, keywords: list, expertise_notes: str | None) -> str:
+    # Otomatik (.wolf/ konuya-gore filtreli) + manuel (kullanicinin tema notlari) birlestirilir.
+    # Ikisi de opsiyonel — hicbiri yoksa bos doner, prompt'taki blok tamamen sessizce dusmus olur.
+    from services.experience_service import get_relevant_experience
+
+    auto = get_relevant_experience(title or "", keywords or [])
+    manual = (expertise_notes or "").strip()
+
+    parts = []
+    if manual:
+        parts.append(f"Your own noted expertise on this topic (use this as a primary source of specific, first-person claims):\n{manual}")
+    if auto:
+        parts.append(f"Specific findings from this project's own engineering history (use these as concrete evidence where relevant, not as filler):\n{auto}")
+
+    if not parts:
+        return ""
+    return "\n\nRELEVANT EXPERIENCE CONTEXT:\n" + "\n\n".join(parts)
+
+
 class NvidiaService:
     def __init__(self):
         api_key = os.environ.get("NVIDIA_API_KEY")
@@ -56,7 +75,7 @@ class NvidiaService:
         self.image_endpoint = os.environ.get("IMAGE_ENDPOINT") or IMAGE_ENDPOINT_DEFAULT
         self._api_key = api_key
 
-    async def _generate_json(self, prompt: str, response_model):
+    async def _generate_json(self, prompt: str, response_model, temperature: float = 0.7):
         # nvext.guided_json meta/llama-3.3-70b-instruct'ta sessizce yok sayiliyor (test edildi:
         # serbest metin donuyor, JSON degil). Onun yerine standart OpenAI response_format
         # json_object kullanilir + semayi prompt'a govde icinde acikca yaziyoruz (json_object
@@ -70,7 +89,7 @@ class NvidiaService:
         completion = await self.client.chat.completions.create(
             model=self.text_model,
             messages=[{"role": "user", "content": json_prompt}],
-            temperature=0.7,
+            temperature=temperature,
             max_tokens=8000,
             response_format={"type": "json_object"},
         )
@@ -90,22 +109,26 @@ class NvidiaService:
         result = await self._generate_json(prompt, TopicList)
         return result["topics"]
 
-    async def generate_outline(self, topic: dict):
+    async def generate_outline(self, topic: dict, expertise_notes: str | None = None):
         from utils.schema import Outline
+        keywords = topic.get("keywords", [])
         prompt = _fill(
             _load_prompt("outline.md"),
             title=topic.get("title", ""),
             angle=topic.get("angle", ""),
-            keywords=", ".join(topic.get("keywords", [])),
+            keywords=", ".join(keywords),
+            experience_context=_build_experience_context(topic.get("title", ""), keywords, expertise_notes),
         )
         return await self._generate_json(prompt, Outline)
 
-    async def draft_article(self, topic: dict, outline: dict):
+    async def draft_article(self, topic: dict, outline: dict, expertise_notes: str | None = None):
         from utils.schema import ArticleDraft
+        keywords = topic.get("keywords", [])
         prompt = _fill(
             _load_prompt("draft.md"),
             title=topic.get("title", ""),
             outline=json.dumps(outline),
+            experience_context=_build_experience_context(topic.get("title", ""), keywords, expertise_notes),
         )
         return await self._generate_json(prompt, ArticleDraft)
 
@@ -114,22 +137,51 @@ class NvidiaService:
         prompt = _fill(_load_prompt("critique.md"), article=json.dumps(article))
         return await self._generate_json(prompt, CritiqueResult)
 
+    async def expand_article(self, article: dict, current_word_count: int, expertise_notes: str | None = None):
+        # meta/llama-3.3-70b-instruct (NVIDIA free tier'da erisilebilen tek buyuk model)
+        # draft/critique asamalarinda 1200-1800 kelime hedefine rutin olarak ulasamiyor
+        # (dogrulandi: 3 farkli prompt stratejisi denendi, hepsi 380-900 kelime bandinda
+        # kaldi). Bu yuzden ayri, dar kapsamli bir "sadece genislet" turu eklendi.
+        from utils.schema import ExpandResult
+        prompt = _fill(
+            _load_prompt("expand.md"),
+            article=json.dumps(article),
+            current_word_count=current_word_count,
+            experience_context=_build_experience_context(article.get("title", ""), article.get("tags", []), expertise_notes),
+        )
+        return await self._generate_json(prompt, ExpandResult)
+
     async def score_article(self, article: dict):
+        # Model artik toplam skor uretmiyor (score-first bug'i: sema/prompt'ta score ilk
+        # sirada olunca model rakami analiz yazilmadan once taahhut ediyordu, sonuc: 10
+        # makalenin 9'u tipatip 72 aliyordu — alt skorlar cok farkliyken bile). Toplam artik
+        # kodda, kriter basina 0-5'ten agirlikli olarak hesaplaniyor. temperature=0.01: judge
+        # cagrisi icin dusuk sicaklik daha tutarli sonuc verir (arastirma: T=0 degil, T~0.01).
         from utils.schema import QualityReport
         prompt = _fill(_load_prompt("quality_rubric.md"), article=json.dumps(article))
-        result = await self._generate_json(prompt, QualityReport)
-        return {"score": result["score"], "report": result}
+        result = await self._generate_json(prompt, QualityReport, temperature=0.01)
+
+        weighted = (
+            result["technical_depth"] * 0.35
+            + result["structural_richness"] * 0.25
+            + result["clarity"] * 0.20
+            + result["originality"] * 0.20
+        )
+        score = round(weighted / 5 * 100)
+        return {"score": score, "report": result}
 
     async def generate_cover_image(self, prompt_text: str) -> bytes:
         # NVIDIA'nin build.nvidia.com katalogunda Stable Diffusion 3.5 Large hosted/bulut API
         # olarak sunulmuyor — sadece kendi GPU'nda Docker ile self-host edilebiliyor (dogrulandi:
         # model sayfasindaki tek "API" yolu `docker run ... -p 8000:8000` + localhost invoke_url).
         # Onun yerine anahtar gerektirmeyen, gercekten ucretsiz Pollinations.ai kullanilir.
-        prompt = _fill(_load_prompt("cover_image.md"), cover_prompt=prompt_text)
+        # cover_prompt'u once kirp, SONRA template'i doldur — aksi halde template'in sonundaki
+        # "Style: ... no embedded text" cumlesi 800 karakter siniri yuzunden kesilebiliyordu.
+        prompt = _fill(_load_prompt("cover_image.md"), cover_prompt=prompt_text[:500])
         async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
             response = await client.get(
-                f"{self.image_endpoint}/{quote(prompt[:800])}",
-                params={"width": 1200, "height": 630, "nologo": "true"},
+                f"{self.image_endpoint}/{quote(prompt)}",
+                params={"width": 1200, "height": 630, "nologo": "true", "model": "flux", "enhance": "true"},
             )
             response.raise_for_status()
             return response.content

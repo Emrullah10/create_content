@@ -9,9 +9,13 @@ export const makeEmbedAssets = ({ articleRepo, assetRepo }) => async ({ articleI
 
   for (const asset of assets) {
     if (!asset.placeholderKey) continue;
+    // placeholderKey DB'de suslu parantezsiz saklanabiliyor (ornek: "DIAGRAM_1"), ama
+    // govdedeki gercek token her zaman "{{DIAGRAM_1}}" — split/join ciplak anahtarla
+    // yapilirsa acilis/kapanis suslu parantezleri govdede kirik markdown olarak kalir.
+    const token = asset.placeholderKey.startsWith('{{') ? asset.placeholderKey : `{{${asset.placeholderKey}}}`;
     if (asset.status === 'uploaded' && asset.remoteUrl) {
       const md = `![${asset.altText ?? ''}](${asset.remoteUrl})\n\n*${asset.caption ?? ''}*`;
-      body = body.split(asset.placeholderKey).join(md);
+      body = body.split(token).join(md);
     } else {
       allEmbedded = false;
     }

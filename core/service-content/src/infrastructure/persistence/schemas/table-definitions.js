@@ -14,7 +14,7 @@ export const enums = {
 
 export const tables = {
   themes: {
-    columns: ['id', 'name', 'description', 'tags', 'target_audience', 'weight', 'is_active', 'created_at', 'updated_at'],
+    columns: ['id', 'name', 'description', 'tags', 'target_audience', 'expertise_notes', 'weight', 'is_active', 'created_at', 'updated_at'],
   },
   topics: {
     columns: ['id', 'theme_id', 'title', 'angle', 'outline', 'keywords', 'status', 'dedup_hash', 'scheduled_for', 'created_by', 'created_at', 'updated_at'],

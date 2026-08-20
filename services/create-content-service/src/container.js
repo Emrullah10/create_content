@@ -21,6 +21,7 @@ import { makeMediumImportPublisher } from '@create-content/core-service-content/
 import { makeCreateTheme } from '@create-content/core-service-content/src/application/use-cases/theme/create-theme.use-case.js';
 import { makeListThemes } from '@create-content/core-service-content/src/application/use-cases/theme/list-themes.use-case.js';
 import { makeToggleTheme } from '@create-content/core-service-content/src/application/use-cases/theme/toggle-theme.use-case.js';
+import { makeUpdateTheme } from '@create-content/core-service-content/src/application/use-cases/theme/update-theme.use-case.js';
 
 import { makeGenerateTopics } from '@create-content/core-service-content/src/application/use-cases/topic/generate-topics.use-case.js';
 import { makeApproveTopic } from '@create-content/core-service-content/src/application/use-cases/topic/approve-topic.use-case.js';
@@ -86,6 +87,7 @@ export const buildContainer = ({
     createTheme: makeCreateTheme(repos),
     listThemes: makeListThemes(repos),
     toggleTheme: makeToggleTheme(repos),
+    updateTheme: makeUpdateTheme(repos),
   };
 
   const topicUseCases = {
