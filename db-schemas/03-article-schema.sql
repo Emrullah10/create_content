@@ -25,7 +25,7 @@ CREATE INDEX idx_articles_topic ON articles (topic_id);
 CREATE TABLE article_revisions (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   article_id   UUID NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
-  stage        VARCHAR(20) NOT NULL CHECK (stage IN ('outline', 'draft', 'critique', 'revised', 'final')),
+  stage        VARCHAR(20) NOT NULL CHECK (stage IN ('outline', 'draft', 'critique', 'revised', 'expand', 'final')),
   model        VARCHAR(100),
   content      JSONB NOT NULL,
   prompt_tokens     INTEGER,

@@ -27,6 +27,7 @@ export const buildRoutes = (container) => {
   router.post('/themes', (req, res, next) => handle(req, res, next, 'themes.create', () => themeController.create(req)));
   router.get('/themes', (req, res, next) => handle(req, res, next, 'themes.list', () => themeController.list(req)));
   router.patch('/themes/:id/toggle', (req, res, next) => handle(req, res, next, 'themes.toggle', () => themeController.toggle(req)));
+  router.patch('/themes/:id', (req, res, next) => handle(req, res, next, 'themes.update', () => themeController.update(req)));
 
   router.post('/topics/generate', (req, res, next) => handle(req, res, next, 'topics.generate', () => topicController.generate(req)));
   router.patch('/topics/:id/approve', (req, res, next) => handle(req, res, next, 'topics.approve', () => topicController.approve(req)));

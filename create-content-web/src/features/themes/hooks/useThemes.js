@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { listThemes, createTheme, toggleTheme } from '@api/themes';
+import { listThemes, createTheme, toggleTheme, updateTheme } from '@api/themes';
 import { queryKeys } from '@shared/constant/query-keys';
 
 export const useThemes = () => useQuery({ queryKey: queryKeys.themes, queryFn: listThemes });
@@ -16,6 +16,14 @@ export const useToggleTheme = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, isActive }) => toggleTheme(id, isActive),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.themes }),
+  });
+};
+
+export const useUpdateTheme = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }) => updateTheme(id, patch),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.themes }),
   });
 };
