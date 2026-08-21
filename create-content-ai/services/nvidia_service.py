@@ -4,18 +4,27 @@ OpenAI SDK ile uyumlu bir uc nokta (https://integrate.api.nvidia.com/v1) kullani
 Gorsel uretimi NVIDIA'dan DEGIL: build.nvidia.com'daki Stable Diffusion 3.5 Large
 hosted/bulut API olarak sunulmuyor — sadece kendi GPU'nda Docker ile self-host
 edilebiliyor (dogrulandi: model sayfasindaki tek entegrasyon yolu `docker run` +
-localhost invoke_url, anahtarla cagrilabilen bir cloud endpoint yok). Bu yuzden
-kapak gorseli icin anahtar gerektirmeyen Pollinations.ai kullanilir.
+localhost invoke_url, anahtarla cagrilabilen bir cloud endpoint yok).
 
-Neden Gemini'den vazgecildi: free tier'da hem metin (gunluk 20 istek) hem gorsel
-(0 kota, faturalandirma sart) modelleri otomasyon icin yetersizdi.
+Kapak gorseli icin Cloudflare Workers AI (@cf/black-forest-labs/flux-1-schnell)
+kullanilir — kart istemeyen ucretsiz tier, gercek FLUX kalitesi (dogrulandi,
+2026-08-20). Pollinations.ai (anahtarsiz) ve Gemini 2.5 Flash Image ikisi de
+denendi: Pollinations sk_ key'i sunucu tarafinda "unauthenticated" donuyordu
+(flux'a hic gecemedi, hep dusuk kaliteli "sana" modeli), Gemini gorsel free
+tier'i 0 kota ile geliyor (faturalandirma sart). Cloudflare kare (1024x1024)
+gorsel donduruyor, Pillow ile 1200x630'a merkez-kirpma yapiliyor.
+
+Neden Gemini metin icin de vazgecildi: free tier'da hem metin (gunluk 20 istek)
+hem gorsel (0 kota, faturalandirma sart) modelleri otomasyon icin yetersizdi.
 """
 import os
 import json
+import base64
+from io import BytesIO
 from pathlib import Path
-from urllib.parse import quote
 from openai import AsyncOpenAI
 import httpx
+from PIL import Image
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,7 +32,9 @@ load_dotenv()
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
-IMAGE_ENDPOINT_DEFAULT = "https://image.pollinations.ai/prompt"
+CLOUDFLARE_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell"
+COVER_WIDTH = 1200
+COVER_HEIGHT = 630
 
 
 def _load_prompt(name: str) -> str:
@@ -71,7 +82,8 @@ class NvidiaService:
         # daha uzun uretim daha uzun surer — 90s bu hedef icin cok kisa kalabiliyordu.
         self.client = AsyncOpenAI(base_url=NVIDIA_BASE_URL, api_key=api_key, timeout=150.0, max_retries=0)
         self.text_model = os.environ.get("NVIDIA_TEXT_MODEL") or "meta/llama-3.3-70b-instruct"
-        self.image_endpoint = os.environ.get("IMAGE_ENDPOINT") or IMAGE_ENDPOINT_DEFAULT
+        self.cloudflare_account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
+        self.cloudflare_api_token = os.environ.get("CLOUDFLARE_API_TOKEN")
         self._api_key = api_key
 
     async def _generate_json(self, prompt: str, response_model, temperature: float = 0.7):
@@ -173,17 +185,38 @@ class NvidiaService:
         # NVIDIA'nin build.nvidia.com katalogunda Stable Diffusion 3.5 Large hosted/bulut API
         # olarak sunulmuyor — sadece kendi GPU'nda Docker ile self-host edilebiliyor (dogrulandi:
         # model sayfasindaki tek "API" yolu `docker run ... -p 8000:8000` + localhost invoke_url).
-        # Onun yerine anahtar gerektirmeyen, gercekten ucretsiz Pollinations.ai kullanilir.
+        # Onun yerine Cloudflare Workers AI (flux-1-schnell) kullanilir — kart istemeyen ucretsiz
+        # tier, gercek FLUX kalitesi (dogrulandi, 2026-08-20; ~173 neuron/gorsel, 10k/gun budget).
         # cover_prompt'u once kirp, SONRA template'i doldur — aksi halde template'in sonundaki
         # "Style: ... no embedded text" cumlesi 800 karakter siniri yuzunden kesilebiliyordu.
+        if not self.cloudflare_account_id or not self.cloudflare_api_token:
+            raise RuntimeError("CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN is not set")
+
         prompt = _fill(_load_prompt("cover_image.md"), cover_prompt=prompt_text[:500])
-        async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
-            response = await client.get(
-                f"{self.image_endpoint}/{quote(prompt)}",
-                params={"width": 1200, "height": 630, "nologo": "true", "model": "flux", "enhance": "true"},
+        url = (
+            f"https://api.cloudflare.com/client/v4/accounts/{self.cloudflare_account_id}"
+            f"/ai/run/{CLOUDFLARE_IMAGE_MODEL}"
+        )
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(
+                url,
+                headers={"Authorization": f"Bearer {self.cloudflare_api_token}"},
+                json={"prompt": prompt},
             )
             response.raise_for_status()
-            return response.content
+            payload = response.json()["result"]["image"]
+
+        # flux-1-schnell kare (1024x1024) donduruyor — kapak formati 1200x630 icin merkezden kirpilir.
+        square = Image.open(BytesIO(base64.b64decode(payload))).convert("RGB")
+        scale = max(COVER_WIDTH / square.width, COVER_HEIGHT / square.height)
+        resized = square.resize((round(square.width * scale), round(square.height * scale)))
+        left = (resized.width - COVER_WIDTH) // 2
+        top = (resized.height - COVER_HEIGHT) // 2
+        cropped = resized.crop((left, top, left + COVER_WIDTH, top + COVER_HEIGHT))
+
+        out = BytesIO()
+        cropped.save(out, format="JPEG", quality=90)
+        return out.getvalue()
 
 
 class _LazyNvidiaService:

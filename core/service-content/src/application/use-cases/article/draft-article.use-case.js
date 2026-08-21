@@ -1,4 +1,4 @@
-import { makeArticle } from '../../../domain/entities/article.js';
+import { makeArticle, relocatePlaceholdersOutOfBannedSections, isolatePlaceholdersOnOwnLine } from '../../../domain/entities/article.js';
 import { slugify } from '@create-content/helper';
 
 export const makeDraftArticle = ({ articleRepo, revisionRepo, assetRepo, themeRepo, aiClient }) => async ({ topic }) => {
@@ -7,13 +7,14 @@ export const makeDraftArticle = ({ articleRepo, revisionRepo, assetRepo, themeRe
 
   const outline = await aiClient.generateOutline(topic, expertiseNotes);
   const draft = await aiClient.draftArticle(topic, outline, expertiseNotes);
+  const bodyMarkdown = isolatePlaceholdersOnOwnLine(relocatePlaceholdersOutOfBannedSections(draft.bodyMarkdown));
 
   const article = makeArticle({
     topicId: topic.id,
     title: draft.title,
     subtitle: draft.subtitle,
     slug: slugify(draft.title),
-    bodyMarkdown: draft.bodyMarkdown,
+    bodyMarkdown,
     summary: draft.summary,
     tags: draft.tags,
     status: 'drafting',

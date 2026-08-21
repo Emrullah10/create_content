@@ -44,9 +44,25 @@ MANDATORY structural requirements (this is graded, not optional):
   provide the actual Mermaid source in the separate `diagrams` array, matched by `key`.
   Mermaid edge labels MUST use the form `-->|Label|` — NEVER `-->|Label|>` (the trailing `>` is
   invalid syntax and renders as a broken diagram). Correct: `A -->|Request| B`. Wrong: `A -->|Request|> B`.
-  Place each placeholder INLINE inside the body of the section it illustrates — never as its own
-  heading (do NOT write "# Diagram 1: ..." as a section), and never after the Conclusion section.
-  The last placeholder must not fall in the final 20% of the article.
+  Node, participant, and entity identifiers MUST NOT contain spaces — Mermaid parses the first
+  space-separated token as the id and silently mangles the rest, which renders as a broken diagram.
+  Use a single camelCase/PascalCase word as the id and put the human-readable label separately.
+  Correct (flowchart): `QP[Query Planner]`. Wrong: `Query Planner[...]`. Correct (sequenceDiagram):
+  `participant QP as Query Planner`. Wrong: `participant Query Planner`. Correct (erDiagram):
+  `QueryPlanner { ... }` or `QUERY_PLANNER { ... }`. Wrong: `Query Planner { ... }`.
+  erDiagram relationship labels (the text after the final `:`) MUST use double quotes only — NEVER
+  single quotes — whenever they contain more than one word, and MUST NOT reuse an all-caps
+  SQL/mermaid keyword (e.g. EXISTS, JOIN, SELECT) as the label — all three break the parser.
+  Correct: `A ||--o{ B : "uses subquery to filter data"`. Wrong: `A ||--o{ B : uses subquery to
+  filter data`, `A ||--o{ B : 'uses'` (single quotes are never valid here, even for one word),
+  and `A ||--o{ B : EXISTS`.
+  Both placeholders MUST go inside the outline's own `sections` list — the technical/explanatory
+  sections that come BEFORE the counterpoint subheading. This is a hard rule: the "When this
+  doesn't apply" / counterpoint section and the Conclusion section must contain ZERO placeholders,
+  no exceptions, even if a diagram would seem to fit there. Decide which 2 of the outline's
+  `sections` get a diagram BEFORE you start writing, then place the corresponding placeholder on
+  its own line, surrounded by blank lines, inside that section's body — never inline mid-sentence,
+  and never as its own heading (do NOT write "# Diagram 1: ..." as a section).
 - At least 3 syntax-highlighted code blocks (use proper language tags, e.g. ```javascript), and
   this is easy to underdeliver on — apply the same per-section discipline as the word count: as you
   write each section, ask "does this section have a concrete code example?" and include one for at

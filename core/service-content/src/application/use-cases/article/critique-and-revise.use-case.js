@@ -1,4 +1,4 @@
-import { wordCount } from '../../../domain/entities/article.js';
+import { wordCount, relocatePlaceholdersOutOfBannedSections, isolatePlaceholdersOnOwnLine } from '../../../domain/entities/article.js';
 import { MIN_WORD_COUNT } from '../../../domain/policies/quality-policy.js';
 
 export const makeCritiqueAndRevise = ({ articleRepo, revisionRepo, topicRepo, themeRepo, aiClient }) => async ({ articleId }) => {
@@ -27,6 +27,11 @@ export const makeCritiqueAndRevise = ({ articleRepo, revisionRepo, topicRepo, th
       summary = expanded.summary ?? summary;
     }
   }
+
+  // critique/expand da draft ile ayni egilimi tasiyor: {{DIAGRAM_N}} placeholder'lari "When
+  // this doesn't apply"/Conclusion gibi bolumlere kaydirabiliyor — draft-article.use-case.js'teki
+  // ile ayni deterministik duzeltme burada da uygulanir (prompt talimati tek basina yetmedi).
+  bodyMarkdown = isolatePlaceholdersOnOwnLine(relocatePlaceholdersOutOfBannedSections(bodyMarkdown));
 
   return articleRepo.update(articleId, { bodyMarkdown, summary });
 };
