@@ -12,3 +12,6 @@ __pycache__/
 uploads/
 coverage/
 .vscode/launch.json
+backups/
+node_modules/.cache
+db-schemas/_combined.sql
