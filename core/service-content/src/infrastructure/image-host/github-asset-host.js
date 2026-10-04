@@ -1,6 +1,7 @@
 // GitHub Contents API ile ayri bir public "content-assets" repo'suna base64 commit atar,
 // raw.githubusercontent.com URL'ini doner. Kalici ve ucretsiz gorsel host cozumu.
 import axios from 'axios';
+import { readFile } from 'node:fs/promises';
 
 export const makeGithubAssetHost = ({ token, repo, branch = 'main' }) => {
   const http = axios.create({
@@ -10,8 +11,10 @@ export const makeGithubAssetHost = ({ token, repo, branch = 'main' }) => {
 
   return {
     upload: async (path, bufferOrPath) => {
-      const buffer = Buffer.isBuffer(bufferOrPath) ? bufferOrPath : (await import('node:fs/promises')).readFile(bufferOrPath);
-      const content = Buffer.from(await buffer).toString('base64');
+      if (!bufferOrPath) throw new Error('upload: bufferOrPath is empty (asset has no local_path or buffer)');
+
+      const buffer = Buffer.isBuffer(bufferOrPath) ? bufferOrPath : await readFile(bufferOrPath);
+      const content = buffer.toString('base64');
 
       await http.put(`/contents/${path}`, {
         message: `content: add ${path}`,

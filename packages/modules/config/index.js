@@ -27,8 +27,9 @@ export const assetHostConfig = {
 };
 
 export const contentConfig = {
-  language:        required('CONTENT_LANGUAGE', 'en'),
+  language:         required('CONTENT_LANGUAGE', 'en'),
   qualityThreshold: parseInt(required('QUALITY_THRESHOLD', '75')),
-  dailyCron:       required('DAILY_CRON', '0 6 * * *'),
-  topicQueueMin:   parseInt(required('TOPIC_QUEUE_MIN', '10')),
+  qualityMaxRounds: parseInt(required('QUALITY_MAX_ROUNDS', '2')),
+  dailyCron:        required('DAILY_CRON', '0 6 * * *'),
+  topicQueueMin:    parseInt(required('TOPIC_QUEUE_MIN', '10')),
 };

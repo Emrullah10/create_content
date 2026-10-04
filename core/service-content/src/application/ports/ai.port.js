@@ -6,6 +6,8 @@
  * @property {(draft: object) => Promise<{revised: object, notes: string}>} critiqueAndRevise
  * @property {(article: object, currentWordCount: number) => Promise<{bodyMarkdown: string, summary: string}>} expandArticle
  * @property {(article: object) => Promise<{score: number, report: object}>} scoreArticle
+ * @property {(mermaidSource: string, error: string, diagramType: string) => Promise<{mermaid: string}>} repairDiagram
+ * @property {(article: object, qualityReport: object, threshold: number) => Promise<{bodyMarkdown: string, summary: string, changes: string[]}>} targetedRevise
  * @property {(prompt: string) => Promise<Buffer>} generateCoverImage
  */
-export const AI_PORT_METHODS = ['generateTopics', 'generateOutline', 'draftArticle', 'critiqueAndRevise', 'expandArticle', 'scoreArticle', 'generateCoverImage'];
+export const AI_PORT_METHODS = ['generateTopics', 'generateOutline', 'draftArticle', 'critiqueAndRevise', 'expandArticle', 'scoreArticle', 'repairDiagram', 'targetedRevise', 'generateCoverImage'];

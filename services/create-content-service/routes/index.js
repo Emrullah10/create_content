@@ -39,6 +39,8 @@ export const buildRoutes = (container) => {
   router.patch('/articles/:id/approve', (req, res, next) =>
     handle(req, res, next, 'articles.approve', () => articleController.approve(req, { qualityThreshold: container.contentConfig.qualityThreshold })));
 
+  router.post('/articles/:id/assets/retry', (req, res, next) => handle(req, res, next, 'articles.retryAssets', () => articleController.retryAssets(req)));
+
   router.post('/articles/:articleId/publish', (req, res, next) => handle(req, res, next, 'publications.publish', () => publicationController.publish(req)));
   router.post('/publications/retry', (req, res, next) => handle(req, res, next, 'publications.retry', () => publicationController.retry()));
 

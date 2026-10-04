@@ -104,7 +104,28 @@ class NvidiaService:
             max_tokens=8000,
             response_format={"type": "json_object"},
         )
-        return json.loads(completion.choices[0].message.content)
+        raw = json.loads(completion.choices[0].message.content)
+
+        # response_format=json_object semaya UYGUNLUGU garanti etmiyor, sadece gecerli JSON
+        # oldugunu garanti ediyor — sema disinda kalan cikti daha once dogrudan dict olarak
+        # dondurulup eksik alanlarda Node'a kadar KeyError/500 olarak sizardi (retry edilemez,
+        # cunku 500 429/503 degil). Pydantic dogrulamasi bunu erken, acik bir hatayla yakalar
+        # ve bir kez daha (daha dusuk sicaklikta) denenir.
+        try:
+            return response_model.model_validate(raw).model_dump()
+        except Exception as validation_error:
+            retry_completion = await self.client.chat.completions.create(
+                model=self.text_model,
+                messages=[{"role": "user", "content": json_prompt}],
+                temperature=min(temperature, 0.2),
+                max_tokens=8000,
+                response_format={"type": "json_object"},
+            )
+            retry_raw = json.loads(retry_completion.choices[0].message.content)
+            try:
+                return response_model.model_validate(retry_raw).model_dump()
+            except Exception:
+                raise validation_error
 
     async def generate_topics(self, theme: dict, existing_titles: list, count: int):
         from utils.schema import TopicList
@@ -180,6 +201,44 @@ class NvidiaService:
         )
         score = round(weighted / 5 * 100)
         return {"score": score, "report": result}
+
+    async def repair_diagram(self, mermaid: str, error: str, diagram_type: str):
+        # Node tarafi gercek mermaid.parse() ile dogruluyor (bkz mermaid-renderer.js) ve
+        # bize GERCEK parser hatasini gonderiyor — regex tahmini yerine somut bir hedef
+        # verilince onarim isabeti dramatik artiyor.
+        from utils.schema import DiagramRepair
+        prompt = _fill(
+            _load_prompt("repair_diagram.md"),
+            mermaid=mermaid,
+            error=error,
+            diagram_type=diagram_type,
+        )
+        return await self._generate_json(prompt, DiagramRepair, temperature=0.2)
+
+    async def targeted_revise(self, article: dict, quality_report: dict, threshold: int = 75):
+        # Skor tabanli geri besleme: critique.md korlemesine revize ediyordu (skor raporu
+        # o asamada henuz yok). Bu, DUSUK skorlu makaleler icin ayri bir tur — hangi kriterin
+        # zayif oldugunu ve NEDEN oldugunu (reasoning alanlari) modele acikca veriyor.
+        from utils.schema import TargetedRevision
+
+        weights = {"technical_depth": 0.35, "structural_richness": 0.25, "clarity": 0.20, "originality": 0.20}
+        overall_score = round(sum(quality_report.get(k, 0) * w for k, w in weights.items()) / 5 * 100)
+
+        breakdown_lines = []
+        for key in weights:
+            score = quality_report.get(key)
+            reasoning = quality_report.get(f"{key}_reasoning", "")
+            breakdown_lines.append(f"- {key}: {score}/5 — {reasoning}")
+
+        prompt = _fill(
+            _load_prompt("targeted-revise.md"),
+            article=json.dumps(article),
+            overall_score=overall_score,
+            threshold=threshold,
+            score_breakdown="\n".join(breakdown_lines),
+            weaknesses="\n".join(f"- {w}" for w in quality_report.get("weaknesses", [])),
+        )
+        return await self._generate_json(prompt, TargetedRevision)
 
     async def generate_cover_image(self, prompt_text: str) -> bytes:
         # NVIDIA'nin build.nvidia.com katalogunda Stable Diffusion 3.5 Large hosted/bulut API

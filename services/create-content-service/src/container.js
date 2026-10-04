@@ -31,6 +31,7 @@ import { makePickNextTopic } from '@create-content/core-service-content/src/appl
 import { makeDraftArticle } from '@create-content/core-service-content/src/application/use-cases/article/draft-article.use-case.js';
 import { makeCritiqueAndRevise } from '@create-content/core-service-content/src/application/use-cases/article/critique-and-revise.use-case.js';
 import { makeScoreArticle } from '@create-content/core-service-content/src/application/use-cases/article/score-article.use-case.js';
+import { makeTargetedRevise } from '@create-content/core-service-content/src/application/use-cases/article/targeted-revise.use-case.js';
 import { makeUpdateArticle } from '@create-content/core-service-content/src/application/use-cases/article/update-article.use-case.js';
 import { makeApproveArticle } from '@create-content/core-service-content/src/application/use-cases/article/approve-article.use-case.js';
 import { makeGetArticle, makeListArticles } from '@create-content/core-service-content/src/application/use-cases/article/get-article.use-case.js';
@@ -39,6 +40,7 @@ import { makeRenderDiagrams } from '@create-content/core-service-content/src/app
 import { makeGenerateCover } from '@create-content/core-service-content/src/application/use-cases/asset/generate-cover.use-case.js';
 import { makeUploadAssets } from '@create-content/core-service-content/src/application/use-cases/asset/upload-assets.use-case.js';
 import { makeEmbedAssets } from '@create-content/core-service-content/src/application/use-cases/asset/embed-assets.use-case.js';
+import { makeRetryAssets } from '@create-content/core-service-content/src/application/use-cases/asset/retry-assets.use-case.js';
 
 import { makePublishToDevto } from '@create-content/core-service-content/src/application/use-cases/publication/publish-to-devto.use-case.js';
 import { makeCrosspostToMedium } from '@create-content/core-service-content/src/application/use-cases/publication/crosspost-to-medium.use-case.js';
@@ -101,6 +103,7 @@ export const buildContainer = ({
     draftArticle: makeDraftArticle({ ...repos, aiClient }),
     critiqueAndRevise: makeCritiqueAndRevise({ ...repos, aiClient }),
     scoreArticle: makeScoreArticle({ ...repos, aiClient }),
+    targetedRevise: makeTargetedRevise({ ...repos, aiClient }),
     updateArticle: makeUpdateArticle(repos),
     approveArticle: makeApproveArticle(repos),
     getArticle: makeGetArticle(repos),
@@ -108,11 +111,19 @@ export const buildContainer = ({
   };
 
   const assetUseCases = {
-    renderDiagrams: makeRenderDiagrams({ ...repos, renderer }),
+    renderDiagrams: makeRenderDiagrams({ ...repos, renderer, aiClient }),
     generateCover: makeGenerateCover({ ...repos, aiClient }),
     uploadAssets: makeUploadAssets({ ...repos, imageHost }),
     embedAssets: makeEmbedAssets(repos),
   };
+
+  assetUseCases.retryAssets = makeRetryAssets({
+    ...repos,
+    renderDiagrams: assetUseCases.renderDiagrams,
+    generateCover: assetUseCases.generateCover,
+    uploadAssets: assetUseCases.uploadAssets,
+    embedAssets: assetUseCases.embedAssets,
+  });
 
   const publicationUseCases = {
     publishToDevto: makePublishToDevto({ ...repos, devtoPublisher }),
@@ -132,7 +143,11 @@ export const buildContainer = ({
     uploadAssets: assetUseCases.uploadAssets,
     embedAssets: assetUseCases.embedAssets,
     scoreArticle: articleUseCases.scoreArticle,
+    targetedRevise: articleUseCases.targetedRevise,
+    articleRepo: repos.articleRepo,
     topicRepo: repos.topicRepo,
+    qualityThreshold: contentConfig.qualityThreshold,
+    qualityMaxRounds: contentConfig.qualityMaxRounds,
   });
 
   const publishOrchestrator = makePublishOrchestrator({

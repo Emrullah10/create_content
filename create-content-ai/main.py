@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from services.nvidia_service import nvidia_service
-from utils.mermaid_guard import is_valid_mermaid
 from typing import Dict, Any, List, Optional
 
 app = FastAPI(title="Create-Content AI Service (NVIDIA NIM)")
@@ -58,15 +57,12 @@ async def outline(topic: Dict[str, Any] = Body(...), expertise_notes: Optional[s
 
 @app.post("/api/v1/ai/draft")
 async def draft(topic: Dict[str, Any] = Body(...), outline: Dict[str, Any] = Body(...), expertise_notes: Optional[str] = Body(None)):
+    # Onceden gecersiz mermaid tespit edilince TUM makale yeniden draft ediliyordu (pahali)
+    # ve ikinci sonuc hic dogrulanmiyordu (etkisiz). Artik diyagram bazinda onarim Node
+    # tarafinda render-diagrams asamasinda gercek mermaid parser'i ile yapiliyor (bkz
+    # /repair-diagram) — burada sadece taslak uretilir, on-filtre kaldirildi.
     try:
-        result = await nvidia_service.draft_article(topic, outline, expertise_notes)
-
-        # Mermaid on-dogrulama: gecersiz diyagramlarda tek bir onarim turu denenir.
-        invalid = [d for d in result.get("diagrams", []) if not is_valid_mermaid(d.get("mermaid", ""))]
-        if invalid:
-            result = await nvidia_service.draft_article(topic, outline, expertise_notes)
-
-        return result
+        return await nvidia_service.draft_article(topic, outline, expertise_notes)
     except Exception as e:
         raise HTTPException(status_code=_status_for(e), detail=str(e))
 
@@ -91,6 +87,30 @@ async def expand(article: Dict[str, Any] = Body(...), current_word_count: int = 
 async def score(article: Dict[str, Any] = Body(..., embed=True)):
     try:
         return await nvidia_service.score_article(article)
+    except Exception as e:
+        raise HTTPException(status_code=_status_for(e), detail=str(e))
+
+
+@app.post("/api/v1/ai/repair-diagram")
+async def repair_diagram(
+    mermaid: str = Body(...),
+    error: str = Body(...),
+    diagram_type: str = Body(...),
+):
+    try:
+        return await nvidia_service.repair_diagram(mermaid, error, diagram_type)
+    except Exception as e:
+        raise HTTPException(status_code=_status_for(e), detail=str(e))
+
+
+@app.post("/api/v1/ai/targeted-revise")
+async def targeted_revise(
+    article: Dict[str, Any] = Body(...),
+    quality_report: Dict[str, Any] = Body(...),
+    threshold: int = Body(75),
+):
+    try:
+        return await nvidia_service.targeted_revise(article, quality_report, threshold)
     except Exception as e:
         raise HTTPException(status_code=_status_for(e), detail=str(e))
 

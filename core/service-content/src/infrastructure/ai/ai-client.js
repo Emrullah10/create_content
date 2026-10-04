@@ -56,6 +56,24 @@ export const makeAiClient = ({ baseUrl }) => {
       return { score: data.score, report: data.report };
     },
 
+    repairDiagram: async (mermaidSource, error, diagramType) => {
+      const { data } = await callWithRetry(() => http.post('/repair-diagram', {
+        mermaid: mermaidSource,
+        error,
+        diagram_type: diagramType,
+      }));
+      return { mermaid: data.mermaid };
+    },
+
+    targetedRevise: async (article, qualityReport, threshold) => {
+      const { data } = await callWithRetry(() => http.post('/targeted-revise', {
+        article,
+        quality_report: qualityReport,
+        threshold,
+      }));
+      return { bodyMarkdown: data.body_markdown, summary: data.summary, changes: data.changes };
+    },
+
     generateCoverImage: async (prompt) => {
       const { data } = await callWithRetry(() => http.post('/cover', { prompt }, { responseType: 'arraybuffer' }));
       return Buffer.from(data);

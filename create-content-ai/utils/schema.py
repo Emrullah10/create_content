@@ -63,3 +63,13 @@ class QualityReport(BaseModel):
     originality: int
     strengths: List[str]
     weaknesses: List[str]
+
+
+class DiagramRepair(BaseModel):
+    mermaid: str
+
+
+class TargetedRevision(BaseModel):
+    body_markdown: str
+    summary: str
+    changes: List[str]
