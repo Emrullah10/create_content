@@ -21,12 +21,16 @@ const DIAGRAM = {
   'stateDiagram-v2': 'stateDiagram-v2\n  [*] --> Draft\n  Draft --> Review\n  Review --> [*]',
 };
 
+// Her bolum basligina ozgu tohum: farkli bolumler birebir ayni metni uretmesin (tekrar-paragraf kontrolu gercek bir hatayi yakalar).
+const seedOf = (text) => [...String(text)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 9973, 7);
+
 const sectionText = ({ heading = 'Section', targetWords = 250, codePlan, diagramPlan, tableHint, kind }) => {
-  const parts = [sentence(Math.max(40, Math.round(targetWords * 0.55)), `${heading.length}`)];
+  const seed = seedOf(heading);
+  const parts = [sentence(Math.max(40, Math.round(targetWords * 0.55)), `a${seed}x`)];
   if (codePlan) parts.push(`\`\`\`${codePlan.language}\n${CODE[codePlan.language] || CODE.javascript}\n\`\`\``);
   if (diagramPlan) parts.push(`\`\`\`mermaid\n${DIAGRAM[diagramPlan.type] || DIAGRAM.flowchart}\n\`\`\`\n*Figure: ${diagramPlan.shows}*`);
   if (tableHint) parts.push('| Option | Cost | Risk |\n|---|---|---|\n| A | low | stale reads |\n| B | high | slower writes |');
-  parts.push(sentence(Math.max(30, Math.round(targetWords * 0.35)), `${kind || 'x'}${targetWords}`));
+  parts.push(sentence(Math.max(30, Math.round(targetWords * 0.35)), `b${seed}${kind || 'x'}`));
   return parts.join('\n\n');
 };
 
@@ -97,5 +101,5 @@ export const makeFakeLlm = ({ recorder, overrides = {} } = {}) => {
     return { text, data, usage, model: 'fake', durationMs: Date.now() - started };
   };
 
-  return { complete, describe: () => ({ writer: { model: 'fake' }, judge: { model: 'fake' }, utility: { model: 'fake' } }), calls };
+  return { complete, describe: () => ({ writer: { model: 'fake' }, judge: { model: 'fake' }, utility: { model: 'fake' } }), calls, handlers };
 };

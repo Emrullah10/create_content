@@ -22,8 +22,11 @@ export const makeTopicRepository = ({ rawQuery }) => {
 
   const findByCode = async ({ topicCode }, { tx } = {}) => one(await run(tx)(`SELECT ${SELECT} FROM ${FROM} WHERE t.topic_code = $1`, [topicCode]));
 
+  const findById = async ({ topicId }, { tx } = {}) => one(await run(tx)(`SELECT ${SELECT} FROM ${FROM} WHERE t.topic_id = $1`, [topicId]));
+
   return {
     findByCode,
+    findById,
 
     // Birebir tekrarda (dedup_key UNIQUE) null doner; cagiran "zaten var" diye sayar.
     insert: async ({ themeId, title, angle, keywords, authorNote, status = 'suggested', source = 'ai', userId }, { tx } = {}) => {

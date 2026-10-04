@@ -5,6 +5,7 @@ const LIST_COLUMNS = `a.article_id, a.article_code, a.article_topic_id, t.topic_
   a.article_tags, a.article_cover_asset_id, a.article_quality_score, a.article_status, a.article_pipeline_stage, a.article_error,
   a.article_canonical_url, a.article_created_at, a.article_updated_at`;
 const DETAIL_COLUMNS = `${LIST_COLUMNS}, a.article_body_markdown, a.article_research_brief, a.article_outline, a.article_quality_report,
+  a.article_metadata,
   (SELECT asset_remote_url FROM content.asset WHERE asset_id = a.article_cover_asset_id) AS cover_url`;
 const FROM = 'content.article a JOIN content.topic t ON t.topic_id = a.article_topic_id';
 
