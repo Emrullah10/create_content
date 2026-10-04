@@ -37,7 +37,7 @@ export const makeGenerateTopics = ({ llm, themeRepo, topicRepo, suggestedMax = 1
       schema: TopicListSchema,
       schemaName: 'topics',
       temperature: 0.9,
-      maxTokens: 3000,
+      maxTokens: 5000,
       meta: { count: want },
     });
 

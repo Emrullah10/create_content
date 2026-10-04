@@ -15,7 +15,7 @@ export const makeResearchArticle = ({ llm, gather, articleRepo, topicRepo, theme
     const { topic } = await loadContext({ articleRepo, topicRepo, themeRepo }, articleId);
     const common = { title: topic.topicTitle, angle: topic.topicAngle || '(none)', keywords: (topic.topicKeywords || []).join(', ') };
 
-    const { data: plan } = await ask({ stage: 'research-plan', articleId, prompt: renderPrompt('research-plan', common), schema: ResearchPlanSchema, schemaName: 'research_plan', temperature: 0.3, maxTokens: 800 });
+    const { data: plan } = await ask({ stage: 'research-plan', articleId, prompt: renderPrompt('research-plan', common), schema: ResearchPlanSchema, schemaName: 'research_plan', temperature: 0.3, maxTokens: 2500 });
     const { sources: candidates, failures } = await gather(plan);
 
     const kept = [];
@@ -28,7 +28,7 @@ export const makeResearchArticle = ({ llm, gather, articleRepo, topicRepo, theme
           schema: FactsSchema,
           schemaName: 'facts',
           temperature: 0.1,
-          maxTokens: 1500,
+          maxTokens: 4000,
           meta: { sourceText: c.text },
         });
         const facts = verifyFacts(data.facts, c.text);

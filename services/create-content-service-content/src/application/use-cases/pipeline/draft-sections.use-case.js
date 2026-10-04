@@ -43,11 +43,11 @@ export const makeDraftSections = ({ llm, articleRepo, topicRepo, themeRepo, sect
       });
       const meta = { heading: section.heading, kind: plan.kind, targetWords: plan.targetWords, codePlan: plan.codePlan, diagramPlan: plan.diagramPlan, tableHint: plan.tableHint };
 
-      let body = cleanSectionBody((await ask({ stage: 'section', articleId, prompt: basePrompt, temperature: 0.7, maxTokens: 2500, meta })).text, section.heading);
+      let body = cleanSectionBody((await ask({ stage: 'section', articleId, prompt: basePrompt, temperature: 0.7, maxTokens: 4000, meta })).text, section.heading);
       let problems = validateSection(plan, body);
       if (problems.length) {
         // Tek duzeltme turu: sorunlar modele geri beslenir.
-        const retry = cleanSectionBody((await ask({ stage: 'section', articleId, prompt: `${basePrompt}\n\nYour previous attempt had these problems, fix them all:\n- ${problems.join('\n- ')}`, temperature: 0.5, maxTokens: 2500, meta })).text, section.heading);
+        const retry = cleanSectionBody((await ask({ stage: 'section', articleId, prompt: `${basePrompt}\n\nYour previous attempt had these problems, fix them all:\n- ${problems.join('\n- ')}`, temperature: 0.5, maxTokens: 4000, meta })).text, section.heading);
         const retryProblems = validateSection(plan, retry);
         if (retryProblems.length <= problems.length) {
           body = retry;

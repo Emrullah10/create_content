@@ -41,7 +41,7 @@ export const makeEditArticle = ({ llm, checkCode, articleRepo, topicRepo, themeR
       const checkResult = runQualityChecks({ body, allowedText, thresholds });
       const stored = article.articleQualityReport?.code;
       const codeReport = stored?.failures?.length ? stored.failures.map((f) => `block #${f.index} (${f.lang}): ${f.error}`).join('\n') : '(all validated code blocks are syntactically valid)';
-      const { data } = await ask({ stage: 'editor', articleId, prompt: renderPrompt('editor', { check_report: checkReportText(checkResult), code_report: codeReport, article: body }), schema: EditorSchema, schemaName: 'editor', temperature: 0.2, maxTokens: 2000 });
+      const { data } = await ask({ stage: 'editor', articleId, prompt: renderPrompt('editor', { check_report: checkReportText(checkResult), code_report: codeReport, article: body }), schema: EditorSchema, schemaName: 'editor', temperature: 0.2, maxTokens: 4000 });
 
       const issues = [...issuesFromChecks({ checkResult, sections, allowedText, thresholds }), ...data.issues.map((i) => ({ ...i, source: 'editor' }))];
       if (!issues.length) {
@@ -58,7 +58,7 @@ export const makeEditArticle = ({ llm, checkCode, articleRepo, topicRepo, themeR
           articleId,
           prompt: renderPrompt('revise-section', { title: article.articleTitle, thesis: outline.thesis, heading: headingKey(section), issues: text, facts: factsText(brief, section.plan?.factIds ?? []), body: section.body }),
           temperature: 0.5,
-          maxTokens: 2500,
+          maxTokens: 4000,
           meta: { body: section.body },
         });
         const next = cleanSectionBody(rewritten, section.heading);

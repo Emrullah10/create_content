@@ -18,7 +18,7 @@ export const makeScoreArticle = ({ llm, articleRepo, topicRepo, themeRepo, secti
     const errors = [];
     for (let i = 0; i < samples; i += 1) {
       try {
-        judgments.push((await ask({ stage: 'judge', articleId, prompt, schema: JudgeSchema, schemaName: 'judge', temperature: 0.3, maxTokens: 2500 })).data);
+        judgments.push((await ask({ stage: 'judge', articleId, prompt, schema: JudgeSchema, schemaName: 'judge', temperature: 0.3, maxTokens: 4000 })).data);
       } catch (e) {
         errors.push(e.message);
       }

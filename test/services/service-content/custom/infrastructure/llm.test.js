@@ -78,6 +78,35 @@ describe('openai-compatible adapter', () => {
   });
 });
 
+describe('dusunen modeller ve saglayiciya ozel alanlar', () => {
+  test('kesilen cikti: butce buyutulup BIR KEZ tekrar denenir', async () => {
+    const create = jest.fn().mockResolvedValueOnce(reply('partial thinking...', 'length')).mockResolvedValueOnce(reply('final answer'));
+    const out = await adapterWith(create).complete({ prompt: 'p', maxTokens: 1000 });
+    expect(out.text).toBe('final answer');
+    expect(create.mock.calls[0][0].max_tokens).toBe(1000);
+    expect(create.mock.calls[1][0].max_tokens).toBe(1800);
+  });
+  test('ikinci kesilme hata verir (sonsuz dongu yok)', async () => {
+    const create = jest.fn(async () => reply('partial', 'length'));
+    await expect(adapterWith(create).complete({ prompt: 'p', maxTokens: 1000 })).rejects.toMatchObject({ code: 'LLM_TRUNCATED' });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+  test('extraBody istege eklenir ama cekirdek alanlari ezmez', async () => {
+    const create = jest.fn(async () => reply('ok'));
+    const a = makeOpenAiCompatibleAdapter({ roles: { writer: { ...roles.writer, extraBody: { chat_template_kwargs: { enable_thinking: false }, model: 'EVIL' } } }, clientFactory: () => ({ chat: { completions: { create } } }) });
+    await a.complete({ prompt: 'p' });
+    expect(create.mock.calls[0][0]).toMatchObject({ model: 'm-writer', chat_template_kwargs: { enable_thinking: false } });
+  });
+  test('LLM_<ROL>_EXTRA_BODY okunur; gecersiz JSON uyarilir; rol basina, miras alinmaz', () => {
+    const warn = jest.fn();
+    const r = readRolesFromEnv({ LLM_WRITER_BASE_URL: 'http://w', LLM_WRITER_API_KEY: 'k', LLM_WRITER_MODEL: 'm', LLM_WRITER_EXTRA_BODY: '{"a":1}', LLM_JUDGE_EXTRA_BODY: 'not json' }, { warn });
+    expect(r.writer.extraBody).toEqual({ a: 1 });
+    expect(r.judge.extraBody).toBeUndefined();
+    expect(r.utility.extraBody).toBeUndefined();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('LLM_JUDGE_EXTRA_BODY'));
+  });
+});
+
 describe('install-from-env', () => {
   const env = { LLM_WRITER_BASE_URL: 'http://w', LLM_WRITER_API_KEY: 'real-key', LLM_WRITER_MODEL: 'big', LLM_UTILITY_MODEL: 'small' };
   test('judge/utility eksik alanları writer\'dan miras alır, model ayrı verilebilir', () => {

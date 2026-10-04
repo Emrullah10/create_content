@@ -1,11 +1,11 @@
-import { countCodeBlocks, countDiagramBlocks, hasTable, wordCount } from './markdown.js';
+import { countCodeBlocks, countDiagramBlocks, hasTable, stripCitationMarkers, wordCount } from './markdown.js';
 
 // Model bazen bolum basligini tekrar yazar ya da "Here is the section:" gibi onsoz ekler; bunlar otomatik temizlenir.
 export const cleanSectionBody = (body, heading) => {
   let lines = String(body).replace(/\r/g, '').trim().split('\n');
   const isHeadingLine = (l) => /^#{1,3}\s+/.test(l) && l.replace(/^#{1,3}\s+/, '').trim().toLowerCase() === String(heading).trim().toLowerCase();
   while (lines.length && (lines[0].trim() === '' || isHeadingLine(lines[0]) || /^(here is|here's|sure[,!]|below is)\b.*:\s*$/i.test(lines[0].trim()))) lines = lines.slice(1);
-  return lines.join('\n').trim();
+  return stripCitationMarkers(lines.join('\n')).trim();
 };
 
 const fenceLines = (body) => body.split('\n').filter((l) => /^```/.test(l.trim())).length;

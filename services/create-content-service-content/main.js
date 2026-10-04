@@ -30,14 +30,25 @@ async function initialize() {
     helper.application.exitOnError();
   });
 
-  // Graceful shutdown: PM2 kill_timeout (30 sn) bu drain'den UZUN olmali.
+  // Kapanis: yeni baglanti kabul edilmez, bosta/acik baglantilar kapatilir ve GECIKMEDEN cikilir. Calisan bir pipeline'i
+  // BEKLEMEYIZ: yarim kalan is bir sonraki acilista boot.js kurtarmasiyla `failed` olur ve panelden "devam et" ile surer.
+  // (Eskiden server.close tum baglantilar bitene kadar bekliyor, eski surec yasamaya devam edip kilit tutuyordu.)
+  // PM2 kill_timeout (30 sn) bu surenin ustunde olmali.
   let shuttingDown = false;
   const shutdown = async (signal) => {
     if (shuttingDown) return;
     shuttingDown = true;
-    console.log(`[shutdown] ${signal} alindi, bosaltiliyor...`);
+    console.log(`[shutdown] ${signal} alindi, kapaniyor...`);
+    const force = setTimeout(() => {
+      console.error('[shutdown] zaman asimi, zorla cikiliyor');
+      process.exit(1);
+    }, 10_000);
+    force.unref();
     try {
-      await new Promise((resolve) => server.close(resolve));
+      const closed = new Promise((resolve) => server.close(resolve));
+      server.closeIdleConnections();
+      setTimeout(() => server.closeAllConnections(), 2000).unref();
+      await closed;
       const { shutdownPorts } = await import('./src/infrastructure/ports.js');
       await shutdownPorts();
       await datasources.coreAppDb?.disconnect?.();

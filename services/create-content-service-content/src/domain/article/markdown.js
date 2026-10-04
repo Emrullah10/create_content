@@ -114,3 +114,18 @@ export const embedAssets = (markdown, assets) => {
   }
   return md.replace(/\n{3,}/g, '\n\n');
 };
+
+// Model, prompt'taki olgu kimliklerini ([F12]) ya da dipnotlari ([^F12]: url) metne sizdirabiliyor. Dipnot tanimlari ve
+// isaretleri ile kimlik etiketleri KODLA silinir (kaynaklar zaten sondaki "References" bolumunde listelenir). Kod bloklarina dokunmaz.
+export const stripCitationMarkers = (markdown) => {
+  const lines = markdown.split('\n');
+  const inCode = new Set();
+  for (const b of parseCodeBlocks(markdown)) for (let i = b.startLine; i <= b.endLine; i += 1) inCode.add(i);
+  const out = [];
+  lines.forEach((l, i) => {
+    if (inCode.has(i)) return out.push(l);
+    if (/^\s*\[\^[^\]]+\]:/.test(l)) return undefined; // dipnot tanimi
+    return out.push(l.replace(/[ \t]*\[\^[^\]]+\]/g, '').replace(/[ \t]*\[F\d+\](?!\()/g, ''));
+  });
+  return out.join('\n').replace(/\n{3,}/g, '\n\n');
+};

@@ -25,7 +25,7 @@ export const makeCodeFixer = ({ ask, checkCode, sectionRepo, nowFn = () => new D
       // Sondan basa: satir indeksleri bozulmasin.
       for (const f of failed.filter((x) => x.sectionId === s.id).sort((a, b) => b.startLine - a.startLine)) {
         try {
-          const { data } = await ask({ stage: 'code-fix', articleId, prompt: renderPrompt('code-fix', { language: f.lang, error: f.error, code: f.code }), schema: CodeFixSchema, schemaName: 'code_fix', temperature: 0.1, maxTokens: 1500, meta: { code: f.code } });
+          const { data } = await ask({ stage: 'code-fix', articleId, prompt: renderPrompt('code-fix', { language: f.lang, error: f.error, code: f.code }), schema: CodeFixSchema, schemaName: 'code_fix', temperature: 0.1, maxTokens: 3000, meta: { code: f.code } });
           body = replaceCodeBlock(body, f, data.code);
         } catch {
           /* duzeltilemezse blok oldugu gibi kalir; rapor hatayi gosterir */

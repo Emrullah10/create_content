@@ -4,12 +4,23 @@ import { makeFakeLlm } from './fake.adapter.js';
 
 const ROLES = ['writer', 'judge', 'utility'];
 const PLACEHOLDER = /^(your-|changeme|<)/i;
+const parseExtraBody = (raw, label, logger) => {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+  } catch {
+    /* asagida uyarilir */
+  }
+  logger.warn?.(`[llm] ${label} is not a JSON object and is ignored`);
+  return undefined;
+};
 const num = (v, d) => (v === undefined || v === '' ? d : Number(v));
 
 // Rol yapilandirmasi: LLM_<ROL>_{BASE_URL,API_KEY,MODEL,JSON_MODE,TIMEOUT_MS,MAX_TOKENS}. judge/utility eksik
 // alanlari writer'dan miras alir (yalniz MODEL farkli verilebilir). Writer eksik/sablon degerliyse YAPILANDIRILMAMIS sayilir:
 // servis yine acilir (panel calisir), pipeline LLM_NOT_CONFIGURED ile durur. Sessizce yanlis calismaz.
-export const readRolesFromEnv = (env = process.env) => {
+export const readRolesFromEnv = (env = process.env, logger = console) => {
   const pick = (role, key) => env[`LLM_${role.toUpperCase()}_${key}`]?.trim() || undefined;
   const writer = {
     baseUrl: pick('writer', 'BASE_URL'),
@@ -18,6 +29,7 @@ export const readRolesFromEnv = (env = process.env) => {
     jsonMode: pick('writer', 'JSON_MODE') || 'json_object',
     timeoutMs: num(pick('writer', 'TIMEOUT_MS'), 300_000),
     maxTokens: num(pick('writer', 'MAX_TOKENS'), 4096),
+    extraBody: parseExtraBody(pick('writer', 'EXTRA_BODY'), 'LLM_WRITER_EXTRA_BODY', logger),
   };
   const roles = { writer };
   for (const role of ROLES.filter((r) => r !== 'writer')) {
@@ -28,6 +40,8 @@ export const readRolesFromEnv = (env = process.env) => {
       jsonMode: pick(role, 'JSON_MODE') ?? writer.jsonMode,
       timeoutMs: num(pick(role, 'TIMEOUT_MS'), writer.timeoutMs),
       maxTokens: num(pick(role, 'MAX_TOKENS'), writer.maxTokens),
+      // Model/saglayiciya ozel oldugu icin MIRAS ALINMAZ: her rol kendi EXTRA_BODY'sini verir.
+      extraBody: parseExtraBody(pick(role, 'EXTRA_BODY'), `LLM_${role.toUpperCase()}_EXTRA_BODY`, logger),
     };
   }
   return roles;
@@ -40,7 +54,7 @@ export const installLlmFromEnv = ({ env = process.env, recorder, logger = consol
     setLlmProvider(makeFakeLlm({ recorder }));
     return { configured: true, provider: 'fake' };
   }
-  const roles = readRolesFromEnv(env);
+  const roles = readRolesFromEnv(env, logger);
   const w = roles.writer;
   if (!w.baseUrl || !w.apiKey || !w.model || PLACEHOLDER.test(w.apiKey)) {
     setLlmProvider(null);

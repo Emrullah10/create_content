@@ -6,12 +6,14 @@ import factorConfig from '12factor-config';
 import log from '../helper/log/index.js';
 const appConfig = {};
 
-const loadEnvFile = (filePath) => {
+export const loadEnvFile = (filePath) => {
   try {
     if (fs.existsSync(filePath)) {
       const envConfig = dotenv.parse(fs.readFileSync(filePath));
+      // Acikca verilmis ortam degiskeni (kabuk, pm2, test) .env'i EZER; .env yalniz TANIMSIZ olanlari doldurur.
+      // (Eskiden her anahtar ezilirdi: `GITHUB_TOKEN= npm start` gibi bir gecici kapatma sessizce yok sayiliyordu.)
       for (const key in envConfig) {
-        process.env[key] = envConfig[key];
+        if (!(key in process.env)) process.env[key] = envConfig[key];
       }
     }
   } catch (error) {

@@ -25,7 +25,7 @@ export const makeOutlineArticle = ({ llm, articleRepo, topicRepo, themeRepo, sec
       schema: OutlineSchema,
       schemaName: 'outline',
       temperature: 0.6,
-      maxTokens: 3500,
+      maxTokens: 6000,
       meta: { title: topic.topicTitle },
     });
 

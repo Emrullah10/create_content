@@ -21,7 +21,7 @@ export const makePrepareAssets = ({ llm, renderer, imageGenerator, assetHost, ar
     for (let round = 0; round < MAX_REPAIR_ROUNDS; round += 1) {
       const { valid, error } = await renderer.validateMermaid(current);
       if (valid) return { source: current, error: null };
-      const { data } = await ask({ stage: 'diagram-repair', articleId, prompt: renderPrompt('diagram-repair', { diagram_type: diagramTypeOf(current), mermaid: current, error }), schema: DiagramRepairSchema, schemaName: 'diagram_repair', temperature: 0.1, maxTokens: 1200 });
+      const { data } = await ask({ stage: 'diagram-repair', articleId, prompt: renderPrompt('diagram-repair', { diagram_type: diagramTypeOf(current), mermaid: current, error }), schema: DiagramRepairSchema, schemaName: 'diagram_repair', temperature: 0.1, maxTokens: 3000 });
       current = data.mermaid.replace(/^```(?:mermaid)?\n?|\n?```$/g, '').trim();
     }
     const finalCheck = await renderer.validateMermaid(current);

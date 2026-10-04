@@ -29,6 +29,7 @@ Table requirement: {{table_hint}}
 
 Hard rules:
 - Output only the section body in Markdown. Do NOT output the section heading; it is added for you. No preface, no "Here is".
+- Never output fact ids such as [F3] or footnote markers such as [^F3] or [^1]. Cite a source only with an inline markdown link to one of the listed URLs.
 - No filler openers, no clichés ("delve", "game-changer", "in today's fast-paced world", "unlock the power").
 - Every number, percentage, benchmark or error message must come from SOURCE FACTS, the author's notes, or be visible in your own code/output listing. Otherwise describe it qualitatively. Never invent statistics.
 - Code: complete, minimal, syntactically valid snippets in fenced blocks with a language tag. Real APIs only; no placeholder ellipses inside code.

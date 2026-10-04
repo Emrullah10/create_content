@@ -50,6 +50,8 @@ export const makeOpenAiCompatibleAdapter = ({ roles, clientFactory = (cfg) => ne
       max_tokens: maxTokens ?? cfg.maxTokens ?? 4096,
       messages: [...(system ? [{ role: 'system', content: system }] : []), { role: 'user', content: prompt + (withSchema ? schemaInstruction(schema) : '') }],
     };
+    // Saglayiciya ozel parametreler (ornek NIM: chat_template_kwargs.enable_thinking=false). Cekirdek alanlari EZMEZ.
+    if (cfg.extraBody) for (const [k, v] of Object.entries(cfg.extraBody)) if (!(k in body)) body[k] = v;
     if (schema && cfg.jsonMode === 'json_object') body.response_format = { type: 'json_object' };
     if (schema && cfg.jsonMode === 'json_schema') body.response_format = { type: 'json_schema', json_schema: { name: schemaName || 'result', schema: z.toJSONSchema(schema), strict: false } };
 
@@ -65,6 +67,7 @@ export const makeOpenAiCompatibleAdapter = ({ roles, clientFactory = (cfg) => ne
     const role = request.role || 'writer';
     const started = Date.now();
     const temperature = request.temperature ?? 0.7;
+    let truncationRetried = false;
     const record = async (extra) => {
       try {
         await recorder?.({ role, stage: request.stage ?? null, articleId: request.articleId ?? null, model: configOf(role).model, durationMs: Date.now() - started, ...extra });
@@ -73,14 +76,30 @@ export const makeOpenAiCompatibleAdapter = ({ roles, clientFactory = (cfg) => ne
       }
     };
     try {
+      // Dusunen (reasoning) modeller dusunme token'larini max_tokens'tan harcar: cikti kesilirse butce buyutulup BIR KEZ tekrar denenir.
+      let tokenBudget = request.maxTokens;
       const run = (extra = '', temp = temperature) =>
-        withRetry(() => callOnce({ ...request, role, prompt: request.prompt + extra, temperature: temp }), {
-          attempts: 4,
-          baseDelayMs: 2000,
-          shouldRetry: retryable,
-          delayMs: (err) => parseRetryAfter(err?.headers?.['retry-after']) ?? undefined,
-          sleep,
-        });
+        withRetry(
+          async () => {
+            try {
+              return await callOnce({ ...request, maxTokens: tokenBudget, role, prompt: request.prompt + extra, temperature: temp });
+            } catch (error) {
+              if (error?.code === 'LLM_TRUNCATED' && !truncationRetried) {
+                truncationRetried = true;
+                tokenBudget = Math.min(Math.round((tokenBudget ?? configOf(role).maxTokens ?? 4096) * 1.8), 12_000);
+                return callOnce({ ...request, maxTokens: tokenBudget, role, prompt: request.prompt + extra, temperature: temp });
+              }
+              throw error;
+            }
+          },
+          {
+            attempts: 4,
+            baseDelayMs: 2000,
+            shouldRetry: retryable,
+            delayMs: (err) => parseRetryAfter(err?.headers?.['retry-after']) ?? undefined,
+            sleep,
+          },
+        );
 
       let out = await run();
       let data;

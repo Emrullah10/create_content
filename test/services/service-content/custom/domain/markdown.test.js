@@ -86,3 +86,17 @@ describe('assembleBody', () => {
     expect(body).toBe('one\n\n## B\n\ntwo');
   });
 });
+
+describe('stripCitationMarkers', () => {
+  test('dipnot işaretleri, tanımları ve olgu kimlikleri silinir; bağlantılar ve kod korunur', async () => {
+    const { stripCitationMarkers } = await import('../../../../../services/create-content-service-content/src/domain/article/markdown.js');
+    const md = ['Readers never block writers[^F21] and writers never block readers [F3].', '', '[^F21]: https://example.com/a', '[^1]: [Doc](https://example.com/b)', '', 'See [the docs](https://example.com/c) and [F9](https://example.com/d).', '', '```js', 'const a = [^F1]; // [F2]', '```'].join('\n');
+    const out = stripCitationMarkers(md);
+    expect(out).toContain('Readers never block writers and writers never block readers.');
+    expect(out).not.toMatch(/\[\^|\[F3\]|^\[\^/m);
+    expect(out).toContain('[the docs](https://example.com/c)');
+    expect(out).toContain('[F9](https://example.com/d)');
+    expect(out).toContain('const a = [^F1]; // [F2]');
+    expect(out).not.toMatch(/\n{3,}/);
+  });
+});
