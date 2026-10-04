@@ -71,6 +71,35 @@ const schemas = {
     required: ['isActive'],
     properties: { isActive: { type: 'boolean' } },
   },
+  topicGenerateRequest: {
+    type: 'object',
+    required: ['themeCode'],
+    properties: { themeCode: { type: 'string' }, count: { type: 'integer', minimum: 1, maximum: 20 } },
+  },
+  topicCreateRequest: {
+    type: 'object',
+    required: ['themeCode', 'title'],
+    properties: {
+      themeCode: { type: 'string' },
+      title: { type: 'string', maxLength: 300 },
+      angle: { type: 'string' },
+      keywords: { type: 'array', items: { type: 'string' } },
+      authorNote: { type: 'string' },
+      status: { type: 'string', enum: ['approved', 'suggested'] },
+    },
+  },
+  topicUpdateRequest: {
+    type: 'object',
+    properties: { title: { type: 'string', maxLength: 300 }, angle: { type: 'string' }, keywords: { type: 'array', items: { type: 'string' } }, authorNote: { type: 'string' } },
+  },
+  topicApproveRequest: { type: 'object', properties: { authorNote: { type: 'string' } } },
+  articleUpdateRequest: {
+    type: 'object',
+    properties: { title: { type: 'string' }, subtitle: { type: 'string' }, summary: { type: 'string' }, bodyMarkdown: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } } },
+  },
+  articleApproveRequest: { type: 'object', properties: { override: { type: 'boolean' } } },
+  articleAbandonRequest: { type: 'object', properties: { rewrite: { type: 'boolean' } } },
+  pipelineRunRequest: { type: 'object', properties: { topicCode: { type: 'string' } } },
 };
 
 const customPaths = {
@@ -98,6 +127,26 @@ const customPaths = {
     pathParams: [pathParam('themeCode')],
   }),
 };
+
+const articleCode = pathParam('articleCode');
+const topicCode = pathParam('topicCode');
+Object.assign(customPaths, {
+  '/v1/dashboard': op({ summary: 'Dashboard: counts, recent jobs, active models', functionName: 'getDashboard', tag: 'Pipeline', method: 'get', permission: PERMISSIONS.contentRead }),
+  '/v1/topics/list': op({ summary: 'Topics with theme, filterable by status/theme', functionName: 'getTopicsList', tag: 'Topic', method: 'get', permission: PERMISSIONS.contentRead }),
+  '/v1/topics/generate': op({ summary: 'Suggest topics for a theme with the LLM', functionName: 'postTopicGenerate', tag: 'Topic', permission: PERMISSIONS.contentManage, requestBodyRef: 'topicGenerateRequest' }),
+  '/v1/topics/create': op({ summary: 'Add a topic manually', functionName: 'postTopicCreate', tag: 'Topic', permission: PERMISSIONS.contentManage, requestBodyRef: 'topicCreateRequest' }),
+  '/v1/topics/{topicCode}/update': op({ summary: 'Edit a topic', functionName: 'postTopicUpdate', tag: 'Topic', permission: PERMISSIONS.contentManage, requestBodyRef: 'topicUpdateRequest', pathParams: [topicCode] }),
+  '/v1/topics/{topicCode}/approve': op({ summary: 'Approve a topic (optionally with an author note)', functionName: 'postTopicApprove', tag: 'Topic', permission: PERMISSIONS.contentManage, requestBodyRef: 'topicApproveRequest', requestRequired: false, pathParams: [topicCode] }),
+  '/v1/topics/{topicCode}/reject': op({ summary: 'Reject a topic', functionName: 'postTopicReject', tag: 'Topic', permission: PERMISSIONS.contentManage, pathParams: [topicCode] }),
+  '/v1/articles/list': op({ summary: 'Articles with counts by status', functionName: 'getArticlesList', tag: 'Article', method: 'get', permission: PERMISSIONS.contentRead }),
+  '/v1/articles/{articleCode}/detail': op({ summary: 'Article detail: body, report, sources, assets, publications, LLM usage', functionName: 'getArticleDetail', tag: 'Article', method: 'get', permission: PERMISSIONS.contentRead, pathParams: [articleCode] }),
+  '/v1/articles/{articleCode}/update': op({ summary: 'Edit an article', functionName: 'postArticleUpdate', tag: 'Article', permission: PERMISSIONS.contentManage, requestBodyRef: 'articleUpdateRequest', pathParams: [articleCode] }),
+  '/v1/articles/{articleCode}/approve': op({ summary: 'Approve an article for publishing', functionName: 'postArticleApprove', tag: 'Article', permission: PERMISSIONS.contentPublish, requestBodyRef: 'articleApproveRequest', requestRequired: false, pathParams: [articleCode] }),
+  '/v1/articles/{articleCode}/retry-assets': op({ summary: 'Retry failed diagrams/cover', functionName: 'postArticleRetryAssets', tag: 'Article', permission: PERMISSIONS.contentRun, pathParams: [articleCode] }),
+  '/v1/articles/{articleCode}/abandon': op({ summary: 'Discard an article (topic returns to the queue or is rejected)', functionName: 'postArticleAbandon', tag: 'Article', permission: PERMISSIONS.contentManage, requestBodyRef: 'articleAbandonRequest', requestRequired: false, pathParams: [articleCode] }),
+  '/v1/pipeline/run': op({ summary: 'Write the next (or a given) approved topic now, in the background', functionName: 'postPipelineRun', tag: 'Pipeline', permission: PERMISSIONS.contentRun, requestBodyRef: 'pipelineRunRequest', requestRequired: false }),
+  '/v1/pipeline/articles/{articleCode}/resume': op({ summary: 'Resume a failed article from the stage where it stopped', functionName: 'postPipelineResume', tag: 'Pipeline', permission: PERMISSIONS.contentRun, pathParams: [articleCode] }),
+});
 
 export default {
   ...coreDefinition,

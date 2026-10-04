@@ -17,3 +17,8 @@ export const isPortInstalled = (name) => registry.has(name);
 export const describePorts = () => Object.fromEntries([...registry].map(([name, { label }]) => [name, label]));
 
 export const lazyPort = (name, methods) => Object.fromEntries(methods.map((m) => [m, (...args) => getPort(name)[m](...args)]));
+
+// Kapanista: tarayici gibi sistem kaynaklarini birakan portlar.
+export const shutdownPorts = async () => {
+  for (const { impl } of registry.values()) await impl.closeBrowser?.().catch(() => {});
+};

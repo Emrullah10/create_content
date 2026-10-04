@@ -34,6 +34,16 @@ const sectionText = ({ heading = 'Section', targetWords = 250, codePlan, diagram
   return parts.join('\n\n');
 };
 
+// Birbirinden gercekten farkli basliklar: benzerlik (pg_trgm) denetimi sahte konulari da eler.
+const FAKE_TOPIC_TITLES = [
+  'Partial indexes are the cheapest speedup you are not using',
+  'Connection pooling traps behind a transaction-mode pgbouncer',
+  'Vacuum tuning for append-only tables with huge retention',
+  'Why your JSONB column needs a generated index before it needs a rewrite',
+  'Choosing between LISTEN/NOTIFY and a job queue for small services',
+  'Reading EXPLAIN ANALYZE output without guessing at the planner',
+];
+
 const OUTLINE = (title) => ({
   title,
   subtitle: 'A practical, opinionated walkthrough',
@@ -61,7 +71,7 @@ const quoteFrom = (text) => {
 export const makeFakeLlm = ({ recorder, overrides = {} } = {}) => {
   const calls = [];
   const handlers = {
-    topics: (r) => ({ topics: Array.from({ length: r.meta?.count ?? 3 }, (_, i) => ({ title: `Fake topic ${Date.now() % 100000}-${i + 1}: a specific engineering question`, angle: 'Defends a concrete position against the common advice.', keywords: ['fake', 'topic'] })) }),
+    topics: (r) => ({ topics: Array.from({ length: r.meta?.count ?? 3 }, (_, i) => ({ title: FAKE_TOPIC_TITLES[i % FAKE_TOPIC_TITLES.length], angle: 'Defends a concrete position against the common advice.', keywords: ['fake', 'topic'] })) }),
     'research-plan': () => ({ queries: ['fake query'], docUrls: [], wikipediaTitles: [] }),
     'research-facts': (r) => {
       const quote = quoteFrom(r.meta?.sourceText);

@@ -38,6 +38,8 @@ async function initialize() {
     console.log(`[shutdown] ${signal} alindi, bosaltiliyor...`);
     try {
       await new Promise((resolve) => server.close(resolve));
+      const { shutdownPorts } = await import('./src/infrastructure/ports.js');
+      await shutdownPorts();
       await datasources.coreAppDb?.disconnect?.();
       process.exit(0);
     } catch (error) {
