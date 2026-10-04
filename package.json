@@ -1,26 +1,66 @@
 {
-  "name": "create-content-mono-repo",
-  "version": "0.1.0",
+  "name": "create-content-monorepo",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "workspaces": [
-    "core/*",
     "packages/modules/*",
-    "services/*",
-    "create-content-web"
+    "packages/persistence-utils",
+    "packages/query-builder",
+    "core/*",
+    "services/*"
   ],
   "scripts": {
-    "dev": "node scripts/dev.js",
-    "dev:service": "npm run dev --workspace=create-content-service",
-    "dev:web": "npm run dev --workspace=create-content-web",
-    "build:schema": "node scripts/build-schema.js",
-    "check:nvidia": "node scripts/check-nvidia-models.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js",
-    "test:unit": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js --testPathPattern=unit",
-    "test:integration": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js --testPathPattern=integration",
-    "test:e2e": "node --experimental-vm-modules node_modules/.bin/jest --config test/config/jest.config.js --testPathPattern=e2e"
+    "dev:backend": "bash scripts/start-backend.sh",
+    "dev:local": "cd create-content-web-app && VITE_PROXY_TARGET=http://127.0.0.1:3100 vite",
+    "build": "cd create-content-web-app && vite build",
+    "build-schema": "node scripts/build-schema.js",
+    "migrate:status": "node scripts/apply-migrations.mjs --status",
+    "migrate": "node scripts/apply-migrations.mjs --pending",
+    "check:llm": "node scripts/check-llm-providers.mjs",
+    "lint": "eslint .",
+    "format": "prettier --write \"./**/*.{js,jsx,json,css,scss,md}\"",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:fast": "TEST_REUSE_DB=1 node --experimental-vm-modules node_modules/.bin/jest",
+    "test:backend": "node --experimental-vm-modules node_modules/.bin/jest --selectProjects backend",
+    "test:web": "node --experimental-vm-modules node_modules/.bin/jest --selectProjects web",
+    "test:packages": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern=packages/.*/__tests__",
+    "test:refresh-schema": "TEST_DB_REFRESH=1 node --experimental-vm-modules node_modules/.bin/jest",
+    "test:e2e": "node e2e/run.js"
+  },
+  "prettier": {
+    "singleQuote": true
+  },
+  "dependencies": {
+    "@faker-js/faker": "^10.6.0",
+    "@mozilla/readability": "^0.6.0",
+    "12factor-config": "^2.0.0",
+    "body-parser": "^2.3.0",
+    "compression": "^1.8.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "jsdom": "^29.1.1",
+    "lodash": "^4.18.1",
+    "mermaid": "^12.1.0",
+    "node-cron": "^4.6.0",
+    "openai": "^7.28.0",
+    "pg": "^8.23.1",
+    "puppeteer": "^25.12.0",
+    "sharp": "^0.35.5",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "@eslint/js": "^9.39.5",
+    "@jest/globals": "^29.7.0",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.9.9",
+    "supertest": "^7.3.1"
   }
 }

@@ -1,16 +1,65 @@
-import '@create-content/config/load-env.js';
-import pg from 'pg';
+import Postgre from './connectors/postgre.js';
 
-const { Pool } = pg;
-
-const pool = new Pool({
-  host:     process.env.POSTGRES_HOST     ?? 'localhost',
-  port:     parseInt(process.env.POSTGRES_PORT ?? '5432'),
-  user:     process.env.POSTGRES_USER     ?? 'postgres',
-  password: process.env.POSTGRES_PASSWORD ?? '',
-  database: process.env.POSTGRES_DB       ?? 'postgres',
+// Immutable configuration
+const datasourceTypes = Object.freeze({
+  postgre: 'postgre',
 });
 
-const query = (text, params) => pool.query(text, params);
+const datasourcesStore = {};
 
-export default { query, pool };
+/**
+ * Creates a connector based on type
+ * @param {Object} setting - Connector settings
+ * @param {string} name - Connector name
+ * @returns {Object} Connector instance
+ */
+const createConnector = async (setting, applicationName) => {
+  if (!setting.type) {
+    throw new Error(
+      `${setting.name} Datasource Config Error. Config is ${JSON.stringify(setting)}`,
+    );
+  }
+  switch (setting.type) {
+    case datasourceTypes.postgre: {
+      return Postgre(setting, applicationName);
+    }
+    default:
+      throw new Error(`${setting.name} Datasource Config Error. Unknown type: ${setting.type}`);
+  }
+};
+
+/**
+ * @name createDatasources
+ * @summary Create datasources which are sending in the parameter.
+ * @throws Throws an error if any error happens.
+ * @param {object} datasourceConfig - datasources list
+ * @param {string} name - application name
+ * @return {object} Promise - resolving or rejecting
+ */
+export const createDatasources = async ({ datasourceConfig, name }) => {
+  for (const setting of datasourceConfig) {
+    let connector = await createConnector(setting, name);
+    if (connector[setting.name]) connector = connector[setting.name];
+    datasourcesStore[setting.name] = connector;
+  }
+
+  return datasourcesStore;
+};
+
+// Error handlers — a process left alive after an uncaught exception or an
+// unhandled rejection is in an undefined state (leaked connections, half-applied
+// transactions). Log the cause, then exit non-zero so the orchestrator restarts
+// a clean process (fail-fast). Logging-only would suppress Node's own
+// terminate-on-rejection default and let a broken process keep serving traffic.
+if (typeof process !== 'undefined') {
+  process.on('uncaughtException', (err) => {
+    console.error('[datasource] uncaughtException — exiting', err);
+    process.exit(1);
+  });
+  process.on('unhandledRejection', (reason) => {
+    console.error('[datasource] unhandledRejection — exiting', reason);
+    process.exit(1);
+  });
+}
+
+export default datasourcesStore;

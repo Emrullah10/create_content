@@ -1,0 +1,7 @@
+{
+  "name": "app-route-binder",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "description": "Redis'siz OpenAPI x-functionName -> Express route baglayici (service-discovery'nin yerine)."
+}
