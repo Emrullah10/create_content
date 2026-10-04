@@ -34,6 +34,8 @@ import { makeFinalizeArticle } from './application/use-cases/pipeline/finalize-a
 import { makeArticlePipeline } from './application/orchestrators/article-pipeline.orchestrator.js';
 import { makeRunPipelineJob } from './application/use-cases/job/run-pipeline-job.use-case.js';
 import { makeGetDashboard } from './application/use-cases/job/get-dashboard.use-case.js';
+import { makePublishToDevto } from './application/use-cases/publication/publish-to-devto.use-case.js';
+import { makeListPublications, makeConfirmMediumImport, makeRetryPublications } from './application/use-cases/publication/publication-actions.use-case.js';
 import { makeListArticles, makeGetArticle, makeUpdateArticle, makeApproveArticle, makeRetryAssets, makeAbandonArticle } from './application/use-cases/article/article-actions.use-case.js';
 
 // Composition root: DI kutuphanesi yok, her use-case bir make<Eylem>(deps) fabrikasi.
@@ -55,11 +57,14 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
     llmCallRepo: makeLlmCallRepository({ rawQuery: rawQueryFn }),
   };
   const wrap = translateHttpErrors ? wrapWithHttpTranslation : (fn) => fn;
-  const p = ports ?? {
+  // Eksik portlar tembel varsayilana duser: yalniz KULLANILDIGINDA PORT_NOT_CONFIGURED verir (testler kismi port seti verebilir).
+  const p = {
     research: lazyPort('research', ['gather']),
     renderer: lazyPort('renderer', ['validateMermaid', 'renderMermaidToPng']),
     imageGenerator: lazyPort('imageGenerator', ['generateCover']),
     assetHost: lazyPort('assetHost', ['upload']),
+    devto: lazyPort('devto', ['create', 'update', 'findByTitle']),
+    ...ports,
   };
   const systemPrompt = loadPrompt('system-writer');
   const linkChecker = makeLinkChecker({ fetchImpl: linkFetch });
@@ -97,6 +102,13 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
     retryAssets: makeRetryAssets({ ...deps, prepareAssets: stagesRaw.assets, finalizeArticle: stagesRaw.final }),
     abandon: makeAbandonArticle(deps),
   };
+  const publishToDevto = makePublishToDevto({ ...deps, devto: p.devto, defaultMode: config.devtoPublishMode });
+  const publicationRaw = {
+    publishToDevto,
+    confirmMediumImport: makeConfirmMediumImport(deps),
+    list: makeListPublications(deps),
+    retryFailed: makeRetryPublications({ ...deps, publish: publishToDevto }),
+  };
   const pipelineRaw = {
     runDaily: jobs.runDaily,
     resumeArticle: jobs.resumeArticle,
@@ -107,6 +119,7 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
     theme: freezeGroup(themeRaw, wrap),
     topic: freezeGroup(topicRaw, wrap),
     article: freezeGroup(articleRaw, wrap),
+    publication: freezeGroup(publicationRaw, wrap),
     pipeline: freezeGroup(pipelineRaw, wrap),
     stages: freezeGroup(stagesRaw, wrap),
   });

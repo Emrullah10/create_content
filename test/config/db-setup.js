@@ -35,7 +35,7 @@ export default async function setup(globalConfig) {
         if (stored === fp) continue;
         console.log(`[test-setup] ${db}: sema degismis, yeniden kuruluyor`);
       }
-      await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()', [db]);
+      await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND usename = current_user AND pid <> pg_backend_pid()', [db]);
       await admin.query(`DROP DATABASE IF EXISTS "${db}"`);
       await admin.query(`CREATE DATABASE "${db}"`);
       const client = await connect(cfg, db);

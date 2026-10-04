@@ -13,7 +13,7 @@ export default async function teardown(globalConfig) {
     await admin.connect();
     await admin.query('SET lock_timeout = 15000');
     for (const db of dbs) {
-      await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()', [db]);
+      await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND usename = current_user AND pid <> pg_backend_pid()', [db]);
       await admin.query(`DROP DATABASE IF EXISTS "${db}"`);
     }
     console.log(`[test-teardown] Silindi: ${dbs.join(', ')}`);

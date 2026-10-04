@@ -40,6 +40,12 @@ export const CODE_TO_FACTORY = Object.freeze({
   ARTICLE_NOT_DELETABLE: conflict,
   ARTICLE_NOT_RESUMABLE: conflict,
   ARTICLE_NOT_DRAFTING: conflict,
+  // yayin
+  PUBLISH_MODE_INVALID: badRequest,
+  ARTICLE_NOT_PUBLISHABLE: conflict,
+  ARTICLE_NOT_PUBLISHED: conflict,
+  MEDIUM_URL_INVALID: badRequest,
+  PUBLISH_FAILED: serviceUnavailable,
   // pipeline / altyapi (503 = yapilandirma eksik, tekrar denenebilir)
   LLM_NOT_CONFIGURED: serviceUnavailable,
   PORT_NOT_CONFIGURED: serviceUnavailable,

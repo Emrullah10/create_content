@@ -8,6 +8,8 @@ import { loadMermaidSource } from './renderer/mermaid-js-source.js';
 import { makeCloudflareCoverGenerator, makeFakeCoverGenerator } from './image/cloudflare-flux.adapter.js';
 import { makeGithubAssetHost, makeFakeAssetHost } from './asset-host/github.adapter.js';
 import { makeFakeResearch, makeFakeRenderer } from './fakes.js';
+import { makeDevtoPublisher } from './publishers/devto.publisher.js';
+import { makeFakePublisher } from './publishers/fake.publisher.js';
 
 const PLACEHOLDER = /^(your-|changeme|<)/i;
 const real = (v) => Boolean(v && v.trim() && !PLACEHOLDER.test(v.trim()));
@@ -23,7 +25,8 @@ export const installPortsFromEnv = ({ env = process.env, recorder, logger = cons
     setPort('renderer', makeFakeRenderer(), 'fake');
     setPort('imageGenerator', makeFakeCoverGenerator(), 'fake');
     setPort('assetHost', makeFakeAssetHost(), 'fake');
-    return { ...summary, research: 'fake', renderer: 'fake', imageGenerator: 'fake', assetHost: 'fake' };
+    setPort('devto', makeFakePublisher().publisher, 'fake');
+    return { ...summary, research: 'fake', renderer: 'fake', imageGenerator: 'fake', assetHost: 'fake', devto: 'fake' };
   }
 
   const gatherer = makeResearchGatherer({
@@ -51,6 +54,13 @@ export const installPortsFromEnv = ({ env = process.env, recorder, logger = cons
   } else {
     setPort('assetHost', null);
     logger.warn?.('[ports] GITHUB_TOKEN / GITHUB_ASSETS_REPO not configured: image upload will fail (article stays in needs_assets)');
+  }
+  if (real(env.DEVTO_API_KEY)) {
+    setPort('devto', makeDevtoPublisher({ apiKey: env.DEVTO_API_KEY }), 'dev.to');
+    summary.devto = 'dev.to';
+  } else {
+    setPort('devto', null);
+    logger.warn?.('[ports] DEVTO_API_KEY not configured: publishing to dev.to is disabled');
   }
   return summary;
 };

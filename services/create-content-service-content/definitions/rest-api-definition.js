@@ -99,6 +99,8 @@ const schemas = {
   },
   articleApproveRequest: { type: 'object', properties: { override: { type: 'boolean' } } },
   articleAbandonRequest: { type: 'object', properties: { rewrite: { type: 'boolean' } } },
+  publishRequest: { type: 'object', properties: { mode: { type: 'string', enum: ['draft', 'live'] } } },
+  mediumConfirmRequest: { type: 'object', required: ['mediumUrl'], properties: { mediumUrl: { type: 'string' } } },
   pipelineRunRequest: { type: 'object', properties: { topicCode: { type: 'string' } } },
 };
 
@@ -144,6 +146,10 @@ Object.assign(customPaths, {
   '/v1/articles/{articleCode}/approve': op({ summary: 'Approve an article for publishing', functionName: 'postArticleApprove', tag: 'Article', permission: PERMISSIONS.contentPublish, requestBodyRef: 'articleApproveRequest', requestRequired: false, pathParams: [articleCode] }),
   '/v1/articles/{articleCode}/retry-assets': op({ summary: 'Retry failed diagrams/cover', functionName: 'postArticleRetryAssets', tag: 'Article', permission: PERMISSIONS.contentRun, pathParams: [articleCode] }),
   '/v1/articles/{articleCode}/abandon': op({ summary: 'Discard an article (topic returns to the queue or is rejected)', functionName: 'postArticleAbandon', tag: 'Article', permission: PERMISSIONS.contentManage, requestBodyRef: 'articleAbandonRequest', requestRequired: false, pathParams: [articleCode] }),
+  '/v1/publications/list': op({ summary: 'Publications per platform', functionName: 'getPublicationsList', tag: 'Publication', method: 'get', permission: PERMISSIONS.contentRead }),
+  '/v1/articles/{articleCode}/publish-devto': op({ summary: 'Publish an approved article to dev.to (draft or live), idempotent', functionName: 'postArticlePublishDevto', tag: 'Publication', permission: PERMISSIONS.contentPublish, requestBodyRef: 'publishRequest', requestRequired: false, pathParams: [articleCode] }),
+  '/v1/articles/{articleCode}/medium-import': op({ summary: 'Record the Medium URL after importing the live dev.to post', functionName: 'postArticleMediumImport', tag: 'Publication', permission: PERMISSIONS.contentPublish, requestBodyRef: 'mediumConfirmRequest', pathParams: [articleCode] }),
+  '/v1/publications/retry': op({ summary: 'Retry failed dev.to publications now', functionName: 'postPublicationsRetry', tag: 'Publication', permission: PERMISSIONS.contentPublish }),
   '/v1/pipeline/run': op({ summary: 'Write the next (or a given) approved topic now, in the background', functionName: 'postPipelineRun', tag: 'Pipeline', permission: PERMISSIONS.contentRun, requestBodyRef: 'pipelineRunRequest', requestRequired: false }),
   '/v1/pipeline/articles/{articleCode}/resume': op({ summary: 'Resume a failed article from the stage where it stopped', functionName: 'postPipelineResume', tag: 'Pipeline', permission: PERMISSIONS.contentRun, pathParams: [articleCode] }),
 });

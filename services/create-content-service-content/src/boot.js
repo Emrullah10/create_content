@@ -40,5 +40,18 @@ export default async () => {
     },
     { timezone: config.timezone }, // ZORUNLU: cron sunucu saatiyle calisir
   );
+  // Basarisiz dev.to yayinlari: her 15 dakikada (dakika kaydirmali) yeniden dener; deneme siniri ve belirsiz-hata korumasi use-case'te.
+  cron.schedule(
+    '7,22,37,52 * * * *',
+    async () => {
+      try {
+        const r = await container.useCases.publication.retryFailed({ caller: SYSTEM_CALLER });
+        if (r.retried) console.log(`[publish-retry] ${r.succeeded}/${r.retried} succeeded`);
+      } catch (error) {
+        console.error('[publish-retry] failed', error.message);
+      }
+    },
+    { timezone: config.timezone },
+  );
   console.log(`[boot] daily-content scheduled: "${config.dailyCron}" (${config.timezone})`);
 };

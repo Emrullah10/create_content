@@ -1,6 +1,7 @@
 import { DiagramRepairSchema } from '../../../infrastructure/llm/schemas.js';
 import { renderPrompt } from '../../../infrastructure/llm/prompt-loader.js';
 import { extractDiagrams, embedAssets } from '../../../domain/article/markdown.js';
+import { appendReferences } from '../../../domain/article/references.js';
 import { makeAsk, completeStage } from '../../pipeline/common.js';
 
 const MAX_REPAIR_ROUNDS = 2;
@@ -40,6 +41,7 @@ export const makePrepareAssets = ({ llm, renderer, imageGenerator, assetHost, ar
       for (const d of extracted.diagrams) await assetRepo.upsertDiagram({ articleId, key: d.key, sourceCode: d.source, altText: d.caption || `Diagram ${d.key.split('_')[1]}`, caption: d.caption });
     }
     if (!template) template = article.articleBodyMarkdown || '';
+    template = appendReferences(template, article.articleResearchBrief, article.articleOutline); // idempotent; yeniden denemede de korunur
     const outline = article.articleOutline;
     if (outline?.coverPrompt) await assetRepo.upsertCover({ articleId, prompt: outline.coverPrompt });
 

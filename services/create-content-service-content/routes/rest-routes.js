@@ -21,6 +21,10 @@ export default {
   postArticleApprove: wrap(h.articleApproveHandler),
   postArticleRetryAssets: wrap(h.articleRetryAssetsHandler),
   postArticleAbandon: wrap(h.articleAbandonHandler),
+  getPublicationsList: wrap(h.publicationListHandler),
+  postArticlePublishDevto: wrap(h.publishToDevtoHandler),
+  postArticleMediumImport: wrap(h.confirmMediumImportHandler),
+  postPublicationsRetry: wrap(h.retryPublicationsHandler),
   postPipelineRun: wrap(h.pipelineRunHandler),
   postPipelineResume: wrap(h.pipelineResumeHandler),
 };

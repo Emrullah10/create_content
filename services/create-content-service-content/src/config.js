@@ -6,6 +6,7 @@ export const readContentConfig = (env = process.env) => ({
   qualityMaxRounds: int(env.QUALITY_MAX_ROUNDS, 2),
   judgeSamples: int(env.JUDGE_SAMPLES, 3),
   topicSuggestedMax: int(env.TOPIC_SUGGESTED_MAX, 15),
+  devtoPublishMode: env.DEVTO_PUBLISH_MODE === 'live' ? 'live' : 'draft',
   dailyCron: env.DAILY_CRON || '0 6 * * *',
   timezone: env.TZ_CRON || 'Europe/Istanbul',
   thresholds: {
