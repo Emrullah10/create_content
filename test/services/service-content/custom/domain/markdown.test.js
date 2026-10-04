@@ -93,7 +93,8 @@ describe('stripCitationMarkers', () => {
     const md = ['Readers never block writers[^F21] and writers never block readers [F3].', '', '[^F21]: https://example.com/a', '[^1]: [Doc](https://example.com/b)', '', 'See [the docs](https://example.com/c) and [F9](https://example.com/d).', '', '```js', 'const a = [^F1]; // [F2]', '```'].join('\n');
     const out = stripCitationMarkers(md);
     expect(out).toContain('Readers never block writers and writers never block readers.');
-    expect(out).not.toMatch(/\[\^|\[F3\]|^\[\^/m);
+    const prose = out.split('```')[0];
+    expect(prose).not.toMatch(/\[\^|\[F3\]/);
     expect(out).toContain('[the docs](https://example.com/c)');
     expect(out).toContain('[F9](https://example.com/d)');
     expect(out).toContain('const a = [^F1]; // [F2]');
