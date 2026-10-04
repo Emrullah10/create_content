@@ -1,6 +1,6 @@
 // Olgu dogrulama: LLM'in cikardigi {claim, quote} ciftinde `quote`, kaynak metinde BIREBIR (bosluk/yazim
 // normalize edilerek) gecmiyorsa olgu atilir. Uydurma alintilari kodla eler; modele guvenilmez.
-const squash = (s) => String(s).toLowerCase().replace(/[\s ]+/g, ' ').replace(/[“”"']/g, '"').trim();
+const squash = (s) => String(s).toLowerCase().replace(/[\s\u00a0]+/g, ' ').replace(/[\u201c\u201d"']/g, '"').trim();
 
 export const quoteInSource = (quote, sourceText) => {
   const q = squash(quote);
