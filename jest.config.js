@@ -27,6 +27,7 @@ export default {
   rootDir: '.',
   maxWorkers: 4, // yerel PG; ortam degisirse yeniden olc
   forceExit: true, // YALNIZCA kok config'te taninir
+  testTimeout: 20_000, // yalniz kok config'te taninir (projects icinde 'Unknown option' uyarisi verir)
   collectCoverageFrom: ['core/**/src/**/*.js', 'services/**/src/**/*.js', '!**/boot.js', '!**/node_modules/**'],
   projects: [
     {
@@ -45,7 +46,6 @@ export default {
       globalSetup: '<rootDir>/test/config/db-setup.js',
       globalTeardown: '<rootDir>/test/config/db-teardown.js',
       setupFiles: ['<rootDir>/test/config/worker-db.js'],
-      testTimeout: 20_000,
     },
     ...(hasWebDeps ? [{
       displayName: 'web',
