@@ -29,7 +29,8 @@
     "test:web": "node --experimental-vm-modules node_modules/.bin/jest --selectProjects web",
     "test:packages": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern=packages/.*/__tests__",
     "test:refresh-schema": "TEST_DB_REFRESH=1 node --experimental-vm-modules node_modules/.bin/jest",
-    "test:e2e": "node e2e/run.js"
+    "test:e2e": "node e2e/run.js",
+    "gen:table-defs": "node scripts/gen-table-definitions.mjs"
   },
   "prettier": {
     "singleQuote": true
