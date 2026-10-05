@@ -30,3 +30,5 @@ uploads/
 # AI katmani: kisisel ve makineye yerel dosyalar
 .codegraph/
 .vscode/launch.json
+e2e/playwright-report/
+e2e/test-results/

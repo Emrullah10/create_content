@@ -12,7 +12,7 @@ export default defineConfig({
   css: { preprocessorOptions: { scss: { additionalData: '@use "@styles/globals" as *;' } } },
   server: {
     host: '127.0.0.1',
-    port: 5174,
+    port: Number(globalThis.process?.env?.VITE_PORT) || 5174,
     strictPort: true,
     proxy: { '/api': { target: proxyTarget, changeOrigin: true, secure: false } },
   },

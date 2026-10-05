@@ -10,6 +10,8 @@ import { ROUTE_PATHS } from '@shared/constant/route-paths';
 import { formatDateTime } from '@utils/format';
 import { usePublications, useRetryPublications } from './hooks/usePublications';
 
+const PLATFORM_LABEL = { devto: 'dev.to', medium: 'Medium' };
+
 export default function PublicationsPage() {
   const { t } = useTranslation();
   const { data, isLoading, error } = usePublications();
@@ -31,7 +33,7 @@ export default function PublicationsPage() {
               {items.map((p) => (
                 <TableRow key={p.publicationId} hover>
                   <TableCell sx={{ maxWidth: 420 }}><Link component={RouterLink} to={ROUTE_PATHS.article(p.articleCode)} underline="hover">{p.articleTitle}</Link></TableCell>
-                  <TableCell>{p.publicationPlatform}</TableCell>
+                  <TableCell>{PLATFORM_LABEL[p.publicationPlatform] ?? p.publicationPlatform}</TableCell>
                   <TableCell><StatusChip status={p.publicationStatus} />{p.publicationError && <Typography variant="caption" color="error" component="div" noWrap sx={{ maxWidth: 260 }}>{p.publicationError}</Typography>}</TableCell>
                   <TableCell>{p.publicationExternalUrl ? <Link href={p.publicationExternalUrl} target="_blank" rel="noreferrer noopener">{t('publications.open')}</Link> : '-'}</TableCell>
                   <TableCell>{formatDateTime(p.publicationUpdatedAt)}</TableCell>
