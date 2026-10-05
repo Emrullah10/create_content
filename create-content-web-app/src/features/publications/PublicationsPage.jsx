@@ -1,24 +1,46 @@
-import { Box, Typography, Stack, Paper } from '@mui/material';
+import { Card, Link, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import MuiButton from '@components/MuiButton/MuiButton';
-import { useMutation } from '@tanstack/react-query';
-import { retryPublications } from '@api/publications';
+import PageHeader from '@components/PageHeader/PageHeader';
+import StatusChip from '@components/StatusChip/StatusChip';
+import LoadingBlock from '@components/LoadingBlock/LoadingBlock';
+import ErrorAlert from '@components/ErrorAlert/ErrorAlert';
+import { ROUTE_PATHS } from '@shared/constant/route-paths';
+import { formatDateTime } from '@utils/format';
+import { usePublications, useRetryPublications } from './hooks/usePublications';
 
-const PublicationsPage = () => {
-  const retryMutation = useMutation({ mutationFn: retryPublications });
+export default function PublicationsPage() {
+  const { t } = useTranslation();
+  const { data, isLoading, error } = usePublications();
+  const retry = useRetryPublications();
+  const items = data?.items ?? [];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>Yayinlar</Typography>
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="body2" sx={{ mb: 2 }}>
-          Basarisiz yayinlari (dev.to/Medium) manuel tekrar dene. Medium token yoksa "pending_import"
-          durumundaki yayinlar icin makale detayindaki canonical URL'i Medium "Import a story" akisina
-          elle yapistirin: https://medium.com/p/import
-        </Typography>
-        <MuiButton onClick={() => retryMutation.mutate()}>Basarisiz Yayinlari Tekrar Dene</MuiButton>
-      </Paper>
-    </Box>
+    <>
+      <PageHeader title={t('publications.title')} subtitle={t('publications.subtitle')} actions={<MuiButton variant="outlined" loading={retry.isPending} onClick={() => retry.mutate()}>{t('publications.retry')}</MuiButton>} />
+      <ErrorAlert error={error} sx={{ mb: 2 }} />
+      {isLoading ? (
+        <LoadingBlock />
+      ) : (
+        <Card variant="outlined">
+          <Table size="small">
+            <TableHead><TableRow><TableCell>{t('articles.titleCol')}</TableCell><TableCell>{t('publications.platform')}</TableCell><TableCell>{t('common.status')}</TableCell><TableCell>{t('publications.link')}</TableCell><TableCell>{t('common.updated')}</TableCell></TableRow></TableHead>
+            <TableBody>
+              {items.length === 0 && <TableRow><TableCell colSpan={5}>{t('common.empty')}</TableCell></TableRow>}
+              {items.map((p) => (
+                <TableRow key={p.publicationId} hover>
+                  <TableCell sx={{ maxWidth: 420 }}><Link component={RouterLink} to={ROUTE_PATHS.article(p.articleCode)} underline="hover">{p.articleTitle}</Link></TableCell>
+                  <TableCell>{p.publicationPlatform}</TableCell>
+                  <TableCell><StatusChip status={p.publicationStatus} />{p.publicationError && <Typography variant="caption" color="error" component="div" noWrap sx={{ maxWidth: 260 }}>{p.publicationError}</Typography>}</TableCell>
+                  <TableCell>{p.publicationExternalUrl ? <Link href={p.publicationExternalUrl} target="_blank" rel="noreferrer noopener">{t('publications.open')}</Link> : '-'}</TableCell>
+                  <TableCell>{formatDateTime(p.publicationUpdatedAt)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+    </>
   );
-};
-
-export default PublicationsPage;
+}

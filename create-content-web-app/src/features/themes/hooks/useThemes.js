@@ -1,29 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { listThemes, createTheme, toggleTheme, updateTheme } from '@api/themes';
-import { queryKeys } from '@shared/constant/query-keys';
+import { useQuery } from '@tanstack/react-query';
+import api from '@api';
+import { QK } from '@shared/constant/queryKeys';
+import useApiMutation from '@hooks/useApiMutation';
 
-export const useThemes = () => useQuery({ queryKey: queryKeys.themes, queryFn: listThemes });
+export const useThemes = () => useQuery({ queryKey: QK.themes, queryFn: api.listThemes });
 
-export const useCreateTheme = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: createTheme,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.themes }),
+export const useSaveTheme = ({ onDone } = {}) =>
+  useApiMutation({
+    mutationFn: ({ themeCode, ...body }) => (themeCode ? api.updateTheme(themeCode, body) : api.createTheme(body)),
+    invalidate: [QK.themes],
+    successKey: 'common.saved',
+    onSuccess: onDone,
   });
-};
 
-export const useToggleTheme = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, isActive }) => toggleTheme(id, isActive),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.themes }),
-  });
-};
-
-export const useUpdateTheme = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, patch }) => updateTheme(id, patch),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.themes }),
-  });
-};
+export const useToggleTheme = () => useApiMutation({ mutationFn: ({ themeCode, isActive }) => api.toggleTheme(themeCode, isActive), invalidate: [QK.themes] });

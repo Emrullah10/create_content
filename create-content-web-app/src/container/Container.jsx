@@ -1,18 +1,20 @@
-import { BrowserRouter, useRoutes } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import ThemeProvider from '@shared/providers/ThemeProvider';
+import NotificationProvider from '@shared/providers/NotificationProvider';
 import QueryProvider from '@shared/providers/QueryProvider';
-import { routes } from '../router/routes.jsx';
+import App from '@router/App';
 
-const AppRoutes = () => useRoutes(routes);
-
-const Container = () => (
-  <ThemeProvider>
-    <QueryProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </QueryProvider>
-  </ThemeProvider>
-);
-
-export default Container;
+// Provider sirasi (sablon §16.3): Theme -> Notification -> Query -> Router -> App
+export default function Container() {
+  return (
+    <ThemeProvider>
+      <NotificationProvider>
+        <QueryProvider>
+          <BrowserRouter basename={import.meta.env.BASE_URL}>
+            <App />
+          </BrowserRouter>
+        </QueryProvider>
+      </NotificationProvider>
+    </ThemeProvider>
+  );
+}

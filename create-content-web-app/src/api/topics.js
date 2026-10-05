@@ -1,5 +1,10 @@
-import http from '@shared/axios/http';
+import http, { unwrap } from '@shared/axios/axios';
 
-export const generateTopics = async (themeId, count = 20) => (await http.post('/topics/generate', { themeId, count })).data;
-export const approveTopic = async (id) => (await http.patch(`/topics/${id}/approve`)).data;
-export const rejectTopic = async (id) => (await http.patch(`/topics/${id}/reject`)).data;
+export default {
+  listTopics: (params) => http.get('/v1/topics/list', { params }).then(unwrap),
+  generateTopics: (body) => http.post('/v1/topics/generate', body).then(unwrap),
+  createTopic: (body) => http.post('/v1/topics/create', body).then(unwrap),
+  updateTopic: (topicCode, body) => http.post(`/v1/topics/${topicCode}/update`, body).then(unwrap),
+  approveTopic: (topicCode, authorNote) => http.post(`/v1/topics/${topicCode}/approve`, { authorNote }).then(unwrap),
+  rejectTopic: (topicCode) => http.post(`/v1/topics/${topicCode}/reject`).then(unwrap),
+};

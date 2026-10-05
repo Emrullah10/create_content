@@ -1,6 +1,8 @@
-import http from '@shared/axios/http';
+import http, { unwrap } from '@shared/axios/axios';
 
-export const listThemes = async () => (await http.get('/themes')).data;
-export const createTheme = async (payload) => (await http.post('/themes', payload)).data;
-export const toggleTheme = async (id, isActive) => (await http.patch(`/themes/${id}/toggle`, { isActive })).data;
-export const updateTheme = async (id, patch) => (await http.patch(`/themes/${id}`, patch)).data;
+export default {
+  listThemes: () => http.get('/v1/themes').then(unwrap), // auto-CRUD: ham dizi
+  createTheme: (body) => http.post('/v1/themes/create', body).then(unwrap),
+  updateTheme: (themeCode, body) => http.post(`/v1/themes/${themeCode}/update`, body).then(unwrap),
+  toggleTheme: (themeCode, isActive) => http.post(`/v1/themes/${themeCode}/toggle`, { isActive }).then(unwrap),
+};

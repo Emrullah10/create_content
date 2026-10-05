@@ -1,6 +1,11 @@
-import http from '@shared/axios/http';
+import http, { unwrap } from '@shared/axios/axios';
 
-export const listArticles = async (status) => (await http.get('/articles', { params: { status } })).data;
-export const getArticle = async (id) => (await http.get(`/articles/${id}`)).data;
-export const updateArticle = async (id, patch) => (await http.patch(`/articles/${id}`, patch)).data;
-export const approveArticle = async (id) => (await http.patch(`/articles/${id}/approve`)).data;
+export default {
+  listArticles: (params) => http.get('/v1/articles/list', { params }).then(unwrap),
+  getArticleDetail: (code) => http.get(`/v1/articles/${code}/detail`).then(unwrap),
+  updateArticle: (code, body) => http.post(`/v1/articles/${code}/update`, body).then(unwrap),
+  approveArticle: (code, override = false) => http.post(`/v1/articles/${code}/approve`, { override }).then(unwrap),
+  retryArticleAssets: (code) => http.post(`/v1/articles/${code}/retry-assets`).then(unwrap),
+  abandonArticle: (code, rewrite = false) => http.post(`/v1/articles/${code}/abandon`, { rewrite }).then(unwrap),
+  resumeArticle: (code) => http.post(`/v1/pipeline/articles/${code}/resume`).then(unwrap),
+};

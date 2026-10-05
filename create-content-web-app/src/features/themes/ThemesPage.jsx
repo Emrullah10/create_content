@@ -1,84 +1,57 @@
 import { useState } from 'react';
-import { Box, Typography, TextField, Switch, Stack, Paper } from '@mui/material';
+import { Card, Chip, IconButton, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
+import { PencilSimple, Plus } from '@phosphor-icons/react';
+import { useTranslation } from 'react-i18next';
 import MuiButton from '@components/MuiButton/MuiButton';
-import { useThemes, useCreateTheme, useToggleTheme, useUpdateTheme } from './hooks/useThemes';
+import PageHeader from '@components/PageHeader/PageHeader';
+import LoadingBlock from '@components/LoadingBlock/LoadingBlock';
+import ErrorAlert from '@components/ErrorAlert/ErrorAlert';
+import ThemeDialog from './ThemeDialog';
+import { useSaveTheme, useThemes, useToggleTheme } from './hooks/useThemes';
 
-const ThemeExpertiseNotes = ({ theme }) => {
-  const updateMutation = useUpdateTheme();
-  const [notes, setNotes] = useState(theme.expertiseNotes ?? '');
-  const dirty = notes !== (theme.expertiseNotes ?? '');
-
-  return (
-    <Box sx={{ mt: 1 }}>
-      <TextField
-        label="Uzmanlik notlarin (opsiyonel — makale uretirken AI'a birinci agizdan deneyim olarak verilir)"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        multiline
-        minRows={2}
-        fullWidth
-        size="small"
-      />
-      <MuiButton
-        sx={{ mt: 1 }}
-        size="sm"
-        variant="outlined"
-        disabled={!dirty || updateMutation.isPending}
-        onClick={() => updateMutation.mutate({ id: theme.id, patch: { expertiseNotes: notes } })}
-      >
-        Notu kaydet
-      </MuiButton>
-    </Box>
-  );
-};
-
-const ThemesPage = () => {
-  const { data: themes = [], isLoading } = useThemes();
-  const createThemeMutation = useCreateTheme();
-  const toggleThemeMutation = useToggleTheme();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-
-  const handleCreate = () => {
-    if (!name.trim()) return;
-    createThemeMutation.mutate({ name, description, tags: [], weight: 1 });
-    setName('');
-    setDescription('');
-  };
+export default function ThemesPage() {
+  const { t } = useTranslation();
+  const { data = [], isLoading, error } = useThemes();
+  const toggle = useToggleTheme();
+  const [editing, setEditing] = useState(null); // null kapali | {} yeni | tema
+  const save = useSaveTheme({ onDone: () => setEditing(null) });
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>Icerik Nisleri (Temalar)</Typography>
-
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField label="Tema adi" value={name} onChange={(e) => setName(e.target.value)} size="small" />
-          <TextField label="Aciklama" value={description} onChange={(e) => setDescription(e.target.value)} size="small" sx={{ flex: 1 }} />
-          <MuiButton onClick={handleCreate} size="md">Ekle</MuiButton>
-        </Stack>
-      </Paper>
-
-      {isLoading ? <Typography>Yukleniyor...</Typography> : (
-        <Stack spacing={1}>
-          {themes.map((theme) => (
-            <Paper key={theme.id} sx={{ p: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1">{theme.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">{theme.description}</Typography>
-                </Box>
-                <Switch
-                  checked={theme.isActive}
-                  onChange={(e) => toggleThemeMutation.mutate({ id: theme.id, isActive: e.target.checked })}
-                />
-              </Stack>
-              <ThemeExpertiseNotes theme={theme} />
-            </Paper>
-          ))}
-        </Stack>
+    <>
+      <PageHeader title={t('themes.title')} subtitle={t('themes.subtitle')} actions={<MuiButton startIcon={<Plus />} onClick={() => setEditing({})}>{t('themes.new')}</MuiButton>} />
+      <ErrorAlert error={error} />
+      {isLoading ? (
+        <LoadingBlock />
+      ) : (
+        <Card variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>{t('themes.name')}</TableCell>
+                <TableCell>{t('themes.tags')}</TableCell>
+                <TableCell>{t('themes.weight')}</TableCell>
+                <TableCell>{t('themes.notes')}</TableCell>
+                <TableCell>{t('common.active')}</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.length === 0 && <TableRow><TableCell colSpan={6}>{t('common.empty')}</TableCell></TableRow>}
+              {data.map((th) => (
+                <TableRow key={th.themeCode} hover>
+                  <TableCell><Typography fontWeight={600}>{th.themeName}</Typography><Typography variant="caption" color="text.secondary">{th.themeTargetAudience}</Typography></TableCell>
+                  <TableCell><Stack direction="row" spacing={0.5} flexWrap="wrap">{(th.themeTags ?? []).map((tag) => <Chip key={tag} size="small" label={tag} />)}</Stack></TableCell>
+                  <TableCell>{th.themeWeight}</TableCell>
+                  <TableCell>{th.themeExpertiseNotes ? <Chip size="small" color="success" label={t('themes.hasNotes')} /> : <Chip size="small" variant="outlined" label={t('themes.noNotes')} />}</TableCell>
+                  <TableCell><Switch size="small" checked={th.themeIsActive} onChange={(e) => toggle.mutate({ themeCode: th.themeCode, isActive: e.target.checked })} /></TableCell>
+                  <TableCell align="right"><Tooltip title={t('common.edit')}><IconButton size="small" onClick={() => setEditing(th)}><PencilSimple /></IconButton></Tooltip></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
-    </Box>
+      {editing && <ThemeDialog key={editing.themeCode ?? 'new'} open theme={editing.themeCode ? editing : null} saving={save.isPending} onSave={save.mutate} onClose={() => setEditing(null)} />}
+    </>
   );
-};
-
-export default ThemesPage;
+}

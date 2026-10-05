@@ -1,93 +1,113 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Box, Grid, Typography, TextField, Paper, Stack, Chip, Alert, Divider } from '@mui/material';
-import ReactMarkdown from 'react-markdown';
+import { useState } from 'react';
+import { Alert, Box, Card, Grid, Link, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { ArrowLeft, CheckCircle, Prohibit, Trash } from '@phosphor-icons/react';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import MuiButton from '@components/MuiButton/MuiButton';
-import { useArticle, useUpdateArticle, useApproveArticle, usePublishArticle } from './hooks/useArticles';
+import MuiTextInput from '@components/MuiTextInput/MuiTextInput';
+import PageHeader from '@components/PageHeader/PageHeader';
+import StatusChip from '@components/StatusChip/StatusChip';
+import ScoreChip from '@components/ScoreChip/ScoreChip';
+import ConfirmDialog from '@components/ConfirmDialog/ConfirmDialog';
+import LoadingBlock from '@components/LoadingBlock/LoadingBlock';
+import ErrorAlert from '@components/ErrorAlert/ErrorAlert';
+import MarkdownView from '@components/MarkdownView/MarkdownView';
+import { ROUTE_PATHS } from '@shared/constant/route-paths';
+import { useDashboard } from '@features/dashboard/hooks/useDashboard';
+import QualityReport from './QualityReport';
+import PipelineTab from './PipelineTab';
+import SourcesTab from './SourcesTab';
+import PublishingPanel from './PublishingPanel';
+import { useAbandonArticle, useApproveArticle, useArticleDetail, useResumeArticle, useRetryAssets, useUpdateArticle } from './hooks/useArticles';
 
-const ArticleDetailPage = () => {
-  const { id } = useParams();
-  const { data: article, isLoading } = useArticle(id);
-  const updateMutation = useUpdateArticle(id);
-  const approveMutation = useApproveArticle(id);
-  const publishMutation = usePublishArticle(id);
+const EDITABLE = ['review', 'needs_assets', 'approved', 'failed'];
 
-  const [body, setBody] = useState('');
-
-  useEffect(() => {
-    if (article) setBody(article.bodyMarkdown ?? '');
-  }, [article?.id]);
-
-  if (isLoading || !article) return <Box sx={{ p: 3 }}><Typography>Yukleniyor...</Typography></Box>;
-
-  const canApprove = article.status === 'review';
-  const canPublish = article.status === 'approved';
+function ContentTab({ article, code }) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState(null); // null = sunucudaki deger
+  const save = useUpdateArticle(code, { onDone: () => setDraft(null) });
+  const editable = EDITABLE.includes(article.articleStatus);
+  const body = draft?.body ?? article.articleBodyMarkdown ?? '';
+  const title = draft?.title ?? article.articleTitle;
+  const dirty = draft !== null;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Box>
-          <Typography variant="h5">{article.title}</Typography>
-          <Typography variant="body2" color="text.secondary">{article.subtitle}</Typography>
-        </Box>
-        <Stack direction="row" spacing={1}>
-          <Chip label={`Kalite: ${article.qualityScore ?? '-'}`} color={article.qualityScore >= 75 ? 'success' : 'warning'} />
-          <Chip label={article.status} />
-        </Stack>
-      </Stack>
-
-      {article.status === 'needs_assets' && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Bazi gorseller (diyagram/kapak) render veya upload edilemedi — makale gomulmemis placeholder icerebilir.
-        </Alert>
-      )}
-
+    <Stack spacing={2}>
+      {article.coverUrl && <Box component="img" src={article.coverUrl} alt="cover" sx={{ maxWidth: 480, borderRadius: 2 }} />}
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Markdown (duzenlenebilir)</Typography>
-          <TextField
-            multiline
-            fullWidth
-            minRows={24}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            sx={{ fontFamily: 'monospace' }}
-          />
-          <MuiButton sx={{ mt: 1 }} size="sm" variant="outlined" onClick={() => updateMutation.mutate({ bodyMarkdown: body })}>
-            Kaydet
-          </MuiButton>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Stack spacing={1.5}>
+            <MuiTextInput label={t('articles.titleCol')} value={title} disabled={!editable} onChange={(e) => setDraft({ title: e.target.value, body })} />
+            <MuiTextInput label={t('articles.body')} value={body} disabled={!editable} multiline minRows={24} maxRows={40} onChange={(e) => setDraft({ title, body: e.target.value })} slotProps={{ htmlInput: { style: { fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 13 } } }} />
+            {editable && <Stack direction="row" spacing={1}><MuiButton loading={save.isPending} disabled={!dirty} onClick={() => save.mutate({ title, bodyMarkdown: body })}>{t('common.save')}</MuiButton><MuiButton variant="text" disabled={!dirty} onClick={() => setDraft(null)}>{t('common.discard')}</MuiButton></Stack>}
+            {article.articleStatus === 'approved' && <Typography variant="caption" color="text.secondary">{t('articles.editResets')}</Typography>}
+          </Stack>
         </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Onizleme</Typography>
-          {article.coverImageUrl && (
-            <Box
-              component="img"
-              src={article.coverImageUrl}
-              alt="Kapak gorseli"
-              sx={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 1, mb: 2 }}
-            />
-          )}
-          <Paper sx={{ p: 2, maxHeight: 600, overflow: 'auto' }}>
-            <ReactMarkdown>{body}</ReactMarkdown>
-          </Paper>
-        </Grid>
+        <Grid size={{ xs: 12, lg: 6 }}><Card variant="outlined" sx={{ p: 2, maxHeight: 900, overflow: 'auto' }}><MarkdownView>{body}</MarkdownView></Card></Grid>
       </Grid>
-
-      {article.qualityReport && (
-        <Paper sx={{ p: 2, mt: 2 }}>
-          <Typography variant="subtitle2">AI Kalite Raporu</Typography>
-          <Divider sx={{ my: 1 }} />
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>{JSON.stringify(article.qualityReport, null, 2)}</pre>
-        </Paper>
-      )}
-
-      <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-        <MuiButton disabled={!canApprove} onClick={() => approveMutation.mutate()}>Onayla</MuiButton>
-        <MuiButton disabled={!canPublish} color="success" onClick={() => publishMutation.mutate()}>Onayla ve Yayinla</MuiButton>
-      </Stack>
-    </Box>
+    </Stack>
   );
-};
+}
 
-export default ArticleDetailPage;
+export default function ArticleDetailPage() {
+  const { t } = useTranslation();
+  const { articleCode } = useParams();
+  const navigate = useNavigate();
+  const { data, isLoading, error } = useArticleDetail(articleCode);
+  const { data: dash } = useDashboard();
+  const [tab, setTab] = useState('content');
+  const [dialog, setDialog] = useState(null); // 'override' | 'abandon'
+  const close = () => setDialog(null);
+  const approve = useApproveArticle(articleCode, { onDone: close });
+  const retry = useRetryAssets(articleCode);
+  const resume = useResumeArticle(articleCode);
+  const abandon = useAbandonArticle(articleCode, { onDone: () => navigate(ROUTE_PATHS.articles) });
+
+  if (isLoading) return <LoadingBlock />;
+  if (error) return <ErrorAlert error={error} />;
+  const { article, assets, sources, publications, llmUsage, stages } = data;
+  const status = article.articleStatus;
+  const threshold = dash?.quality?.threshold ?? 75;
+  const below = article.articleQualityScore !== null && article.articleQualityScore < threshold;
+
+  const actions = (
+    <>
+      {status === 'failed' && <MuiButton loading={resume.isPending} onClick={() => resume.mutate()}>{t('articles.resume')}</MuiButton>}
+      {status === 'needs_assets' && <MuiButton loading={retry.isPending} onClick={() => retry.mutate()}>{t('articles.retryAssets')}</MuiButton>}
+      {status === 'review' && <MuiButton color="success" startIcon={<CheckCircle weight="fill" />} loading={approve.isPending} onClick={() => (below ? setDialog('override') : approve.mutate(false))}>{t('articles.approve')}</MuiButton>}
+      {!['publishing', 'published'].includes(status) && <MuiButton variant="outlined" color="error" startIcon={<Trash />} onClick={() => setDialog('abandon')}>{t('articles.abandon')}</MuiButton>}
+    </>
+  );
+
+  return (
+    <>
+      <Link component={RouterLink} to={ROUTE_PATHS.articles} underline="none" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mb: 1 }}><ArrowLeft /> {t('articles.back')}</Link>
+      <PageHeader title={article.articleTitle} subtitle={article.articleSubtitle} actions={actions} />
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+        <StatusChip status={status} /><ScoreChip score={article.articleQualityScore} /><Typography variant="caption" color="text.secondary">{t('articles.stage')}: {article.articlePipelineStage ?? '-'}</Typography>
+      </Stack>
+      {article.articleError && <Alert severity="error" sx={{ mb: 2 }}>{article.articleError}</Alert>}
+      {status === 'drafting' && <Alert severity="info" sx={{ mb: 2 }}>{t('articles.draftingNote')}</Alert>}
+      {status === 'needs_assets' && <Alert severity="warning" sx={{ mb: 2 }}>{t('articles.needsAssets', { count: assets.filter((a) => a.status !== 'uploaded').length })}</Alert>}
+      {status === 'review' && below && <Alert severity="warning" sx={{ mb: 2 }}>{t('articles.belowThreshold', { score: article.articleQualityScore, threshold })}</Alert>}
+
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }} variant="scrollable">
+        <Tab value="content" label={t('articles.tabs.content')} />
+        <Tab value="report" label={t('articles.tabs.report')} />
+        <Tab value="sources" label={`${t('articles.tabs.sources')} (${sources.length})`} />
+        <Tab value="pipeline" label={t('articles.tabs.pipeline')} />
+        <Tab value="publishing" label={t('articles.tabs.publishing')} />
+      </Tabs>
+      {tab === 'content' && <ContentTab key={`${article.articleCode}-${article.articleUpdatedAt}`} article={article} code={articleCode} />}
+      {tab === 'report' && <QualityReport report={article.articleQualityReport} />}
+      {tab === 'sources' && <SourcesTab sources={sources} brief={article.articleResearchBrief} />}
+      {tab === 'pipeline' && <PipelineTab stages={stages} llmUsage={llmUsage} />}
+      {tab === 'publishing' && <PublishingPanel article={article} publications={publications} />}
+
+      <ConfirmDialog open={dialog === 'override'} title={t('articles.overrideTitle')} message={t('articles.overrideMsg', { score: article.articleQualityScore, threshold })} confirmLabel={t('articles.approveAnyway')} color="warning" loading={approve.isPending} onConfirm={() => approve.mutate(true)} onClose={close} />
+      <ConfirmDialog open={dialog === 'abandon'} title={t('articles.abandonTitle')} message={t('articles.abandonMsg')} onClose={close} confirmLabel={t('articles.abandonRewrite')} loading={abandon.isPending} onConfirm={() => abandon.mutate(true)}>
+        <MuiButton variant="text" color="error" startIcon={<Prohibit />} sx={{ mt: 1 }} loading={abandon.isPending} onClick={() => abandon.mutate(false)}>{t('articles.abandonDiscard')}</MuiButton>
+      </ConfirmDialog>
+    </>
+  );
+}
