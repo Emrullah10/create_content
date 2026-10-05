@@ -18,6 +18,9 @@ export const FactsSchema = z.object({ facts: z.array(z.object({ claim: str(400),
 const CodePlan = z.object({ language: z.enum(['javascript', 'typescript', 'python', 'bash', 'sql', 'json', 'yaml']), shows: str(240) }).nullable();
 const DiagramPlan = z.object({ type: z.enum(['flowchart', 'sequenceDiagram', 'erDiagram', 'stateDiagram-v2']), shows: str(240) }).nullable();
 
+// Gorsel uretici (FLUX) metin/diyagram iceren istemleri bozuk yazilarla cizer: kapak istemi somut bir gorsel metafor olmali.
+export const COVER_FORBIDDEN = /\b(diagram|flowchart|chart|graph|screenshot|screen|dashboard|code|text|label|caption|ui|interface|table)s?\b/i;
+
 export const OutlineSchema = z
   .object({
     title: str(160),
@@ -53,6 +56,7 @@ export const OutlineSchema = z
     if (diagrams < 2 || diagrams > 3) fail(`exactly 2 or 3 sections must have a diagramPlan (found ${diagrams})`);
     if (o.sections.filter((s) => s.codePlan).length < 3) fail('at least 3 sections must have a codePlan');
     if (o.sections.filter((s) => s.tableHint).length < 1) fail('one section must have a tableHint');
+    if (COVER_FORBIDDEN.test(o.coverPrompt)) fail('coverPrompt must be a concrete visual metaphor made of physical objects, shapes and light; it must not mention diagrams, charts, screens, code, text, labels or tables');
   });
 
 export const EditorSchema = z.object({

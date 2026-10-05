@@ -169,3 +169,17 @@ describe('retry / rate limit yardımcıları', () => {
     expect(sleeps).toEqual([1000]);
   });
 });
+
+describe('outline kapak istemi kuralı', () => {
+  test('diyagram/yazı anlatan kapak istemi reddedilir, metafor kabul edilir', async () => {
+    const { OutlineSchema, COVER_FORBIDDEN } = await import('../../../../../services/create-content-service-content/src/infrastructure/llm/schemas.js');
+    const { makeFakeLlm } = await import('../../../../../services/create-content-service-content/src/infrastructure/llm/fake.adapter.js');
+    const base = (await makeFakeLlm().complete({ stage: 'outline', prompt: 'x', schema: OutlineSchema, meta: { title: 'T' } })).data;
+    expect(OutlineSchema.safeParse(base).success).toBe(true);
+    for (const bad of ['A split diagram showing readers and writers', 'A dashboard with charts', 'Server with the label MVCC', 'A flowchart of vacuum']) {
+      expect(COVER_FORBIDDEN.test(bad)).toBe(true);
+      expect(OutlineSchema.safeParse({ ...base, coverPrompt: bad }).success).toBe(false);
+    }
+    expect(OutlineSchema.safeParse({ ...base, coverPrompt: 'Two glass highways with glowing cars and a road crew sweeping leaves' }).success).toBe(true);
+  });
+});

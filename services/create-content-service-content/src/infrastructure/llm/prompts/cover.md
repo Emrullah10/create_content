@@ -1,3 +1,3 @@
 {{cover_prompt}}
 
-Style: clean, modern tech-editorial illustration, flat design, high contrast, suitable as a blog cover image, wide aspect ratio, no embedded text or letters in the image.
+Style: clean, modern editorial illustration, flat vector design with a limited bold colour palette, high contrast, one clear subject centred in the frame with generous empty margins (the image is cropped to a wide banner). Pure illustration: absolutely no text, letters, numbers, labels, captions, diagrams, flowcharts, charts, code, user interfaces or screenshots.

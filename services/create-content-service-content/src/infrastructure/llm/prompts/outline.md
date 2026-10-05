@@ -18,5 +18,5 @@ Produce:
   * First section: kind "intro" (hook + thesis, no heading shown), last: kind "conclusion". Exactly one section has kind "counterpoint" (a real objection stated, conceded in part, then rebutted); all others kind "body".
   * Each section: heading (specific, not "Introduction"), goal (what the reader must understand after it), factIds (ids from SOURCE FACTS to use, may be empty), targetWords (intro 120-180, conclusion 120-180, others 220-380), codePlan (null or {language, shows}: at least 4 body sections must have one; language one of javascript, typescript, python, bash, sql, json, yaml), diagramPlan (null or {type, shows}: exactly 2 or 3 sections in total; type one of flowchart, sequenceDiagram, erDiagram, stateDiagram-v2).
   * One body section must contain a comparison table (set tableHint to what it compares), all others tableHint null.
-- coverPrompt: one sentence describing a clean editorial illustration for the cover (no text in the image).
+- coverPrompt: one sentence describing the cover as a concrete VISUAL METAPHOR made of physical objects, shapes and light (for example "two parallel glass highways with glowing cars passing a road crew sweeping leaves"). Never describe a diagram, flowchart, chart, screen, code or anything containing text.
 Do not invent facts in the plan.
