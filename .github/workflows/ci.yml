@@ -1,0 +1,33 @@
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env: { POSTGRES_USER: ci_user, POSTGRES_PASSWORD: ci_pass, POSTGRES_DB: create_content }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d create_content" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_PORT: '5432'
+      TEST_DB_USER: ci_user
+      TEST_DB_PASSWORD: ci_pass
+      TEST_DB_BASE_NAME: create_content_test
+      LLM_PROVIDER: fake
+      PUBLISHER_PROVIDER: fake
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: (cd create-content-web-app && npx eslint .)
+      - run: npm run test:web
+      - run: npm run test:backend
+      - run: npm run build

@@ -1,6 +1,7 @@
 {
-  "name": "@create-content/errors",
-  "version": "0.1.0",
+  "name": "app-errors",
+  "version": "1.0.0",
   "type": "module",
-  "main": "index.js"
+  "main": "index.js",
+  "description": "HTTP error responses + route error handler."
 }

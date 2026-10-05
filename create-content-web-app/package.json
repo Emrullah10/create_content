@@ -1,0 +1,13 @@
+{
+  "name": "create-content-web-app",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "create-content control panel. Bagimliliklarin TAMAMI kok package.json'dadir (sablon §3.1); burada yalniz script'ler durur.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint ."
+  }
+}

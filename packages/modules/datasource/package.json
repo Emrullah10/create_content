@@ -1,6 +1,7 @@
 {
-  "name": "@create-content/datasource",
-  "version": "0.1.0",
+  "name": "app-datasource",
+  "version": "1.0.0",
   "type": "module",
-  "main": "index.js"
+  "main": "index.js",
+  "description": "Datasource connectors (postgre, kafka, redis, rest)."
 }

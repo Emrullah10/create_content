@@ -1,14 +1,34 @@
-node_modules/
-.env
-.env.local
-.env.*.local
-dist/
-build/
+**/node_modules
 *.log
+.DS_Store
+.worktrees/
+
+# env ve sirlar
+.env
+.env.*
+!.env.example
+!.env.test.example
+!create-content-web-app/.env.example
+.env.generated.json
+secrets/
+*.pem
+
+# uretilen ciktilar / yerel veri
+db-schemas/_combined.sql
+**/dist/
+create-content-web-app/dist-e2e/
+coverage/
+backups/
+node_modules/.cache
+var/
+e2e/playwright-report/
+e2e/test-results/
 venv/
 __pycache__/
-*.pyc
-.DS_Store
 uploads/
-coverage/
+
+# AI katmani: kisisel ve makineye yerel dosyalar
+.codegraph/
 .vscode/launch.json
+e2e/playwright-report/
+e2e/test-results/
