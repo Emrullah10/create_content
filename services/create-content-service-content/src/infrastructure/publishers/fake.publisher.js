@@ -28,6 +28,7 @@ export const makeFakePublisher = () => {
       Object.assign(hit, { title: payload.title, published: payload.published, payload });
       return { id: hit.id, url: hit.url, published: hit.published };
     },
+    listMine: async () => articles.map((a) => ({ id: a.id, url: a.url, published: a.published })),
     findByTitle: async (title) => {
       track('findByTitle', title);
       const hit = articles.find((a) => a.title === title);

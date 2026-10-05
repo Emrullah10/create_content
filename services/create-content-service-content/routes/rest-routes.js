@@ -24,6 +24,7 @@ export default {
   getPublicationsList: wrap(h.publicationListHandler),
   postArticlePublishDevto: wrap(h.publishToDevtoHandler),
   postArticleMediumImport: wrap(h.confirmMediumImportHandler),
+  postPublicationsSync: wrap(h.syncPublicationsHandler),
   postPublicationsRetry: wrap(h.retryPublicationsHandler),
   postPipelineRun: wrap(h.pipelineRunHandler),
   postPipelineResume: wrap(h.pipelineResumeHandler),

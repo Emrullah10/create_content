@@ -5,13 +5,10 @@ const UNSAFE = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export default (config) => {
   const port = String(config.port);
-  const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`, ...(config.extraHosts || [])]);
-  const origins = new Set(
-    String(process.env.PANEL_ORIGINS || 'http://127.0.0.1:5174,http://localhost:5174')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean),
-  );
+  // Sunucuda alan adi arkasinda: ALLOWED_HOSTS=panel.example.com (nginx Host'u oldugu gibi iletmeli), PANEL_ORIGINS=https://panel.example.com
+  const list = (v) => String(v || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`, ...(config.extraHosts || []), ...list(process.env.ALLOWED_HOSTS)]);
+  const origins = new Set(list(process.env.PANEL_ORIGINS || 'http://127.0.0.1:5174,http://localhost:5174'));
   return (req, res, next) => {
     // Vite proxy changeOrigin:true Host'u hedefe cevirir; dogrudan istekler de ayni listede.
     if (!hosts.has(String(req.headers.host || ''))) {

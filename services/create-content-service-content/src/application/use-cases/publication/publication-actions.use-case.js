@@ -1,6 +1,6 @@
 import { PERMISSIONS, requireCallerPermission } from 'app-shared';
 import { DomainError } from '../../../domain/errors/domain-error.js';
-import { isMediumUrl } from '../../../domain/publication/devto-payload.js';
+import { isMediumUrl, mediumImportUrl } from '../../../domain/publication/devto-payload.js';
 
 export const makeListPublications = ({ publicationRepo }) => async ({ caller, limit } = {}) => {
   requireCallerPermission(caller, PERMISSIONS.contentRead);
@@ -35,4 +35,27 @@ export const makeRetryPublications = ({ publicationRepo, articleRepo, publish, m
     }
   }
   return { retried: results.length, succeeded: results.filter((r) => r.ok).length, results };
+};
+
+// dev.to panelinden ELLE yayina alinan taslaklari yerel kayda yansitir: `draft` publication'lar dev.to'daki gercek duruma gore `published` olur,
+// makale `approved` -> `published` gecer ve Medium icin `pending_import` acilir. Yalniz okur (dev.to'ya yazmaz); hata verirse hicbir sey degismez.
+export const makeSyncPublications = ({ publicationRepo, articleRepo, devto, nowFn = () => new Date() }) => async ({ caller } = {}) => {
+  requireCallerPermission(caller, PERMISSIONS.contentPublish);
+  const drafts = (await publicationRepo.listAll({ limit: 500 })).filter((p) => p.publicationPlatform === 'devto' && p.publicationStatus === 'draft' && p.publicationExternalId);
+  if (drafts.length === 0) return { checked: 0, updated: 0 };
+  const remote = new Map((await devto.listMine()).map((r) => [r.id, r]));
+  let updated = 0;
+  for (const p of drafts) {
+    const r = remote.get(String(p.publicationExternalId));
+    if (!r?.published) continue;
+    const now = nowFn();
+    await publicationRepo.update({ publicationId: p.publicationId, patch: { status: 'published', externalUrl: r.url, liveAt: now, error: null, metadata: { mode: 'live' } }, now });
+    const article = await articleRepo.transition({ articleId: p.publicationArticleId, from: ['approved'], to: 'published', patch: { canonicalUrl: r.url }, userId: caller.callerUserId, now });
+    if (article) {
+      const medium = await publicationRepo.ensure({ articleId: p.publicationArticleId, platform: 'medium' });
+      if (medium.publicationStatus !== 'published') await publicationRepo.update({ publicationId: medium.publicationId, patch: { status: 'pending_import', metadata: { importUrl: mediumImportUrl(r.url) } }, now });
+    }
+    updated += 1;
+  }
+  return { checked: drafts.length, updated };
 };

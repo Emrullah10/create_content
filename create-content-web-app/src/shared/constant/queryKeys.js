@@ -6,4 +6,5 @@ export const QK = Object.freeze({
   articles: (params) => ['articles', 'list', params],
   article: (code) => ['articles', 'detail', code],
   publications: ['publications', 'list'],
+  authSession: ['auth', 'session'],
 });

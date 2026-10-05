@@ -141,3 +141,19 @@ describe('Medium aktarma onayı', () => {
     expect(list.items.map((p) => [p.publicationPlatform, p.publicationStatus]).sort()).toEqual([['devto', 'published'], ['medium', 'published']]);
   });
 });
+
+describe('dev.to senkronu (elle yayına alınan taslak)', () => {
+  test('dev.to panelinde yayına alınan taslak: publication published, makale published, Medium pending_import', async () => {
+    const { container, fake } = setup();
+    const article = await seedApproved(container);
+    await publish(container, article, 'draft');
+    expect(await container.useCases.publication.sync({ caller: OPERATOR_CALLER })).toEqual({ checked: 1, updated: 0 });
+
+    fake.articles[0].published = true; // kullanici dev.to'dan yayina aldi
+    expect(await container.useCases.publication.sync({ caller: OPERATOR_CALLER })).toEqual({ checked: 1, updated: 1 });
+    const pubs = await container.repos.publicationRepo.listByArticle({ articleId: article.articleId });
+    expect(pubs.find((p) => p.publicationPlatform === 'devto')).toMatchObject({ publicationStatus: 'published' });
+    expect(pubs.find((p) => p.publicationPlatform === 'medium')).toMatchObject({ publicationStatus: 'pending_import' });
+    expect((await container.repos.articleRepo.findById({ articleId: article.articleId })).articleStatus).toBe('published');
+  });
+});

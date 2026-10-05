@@ -27,7 +27,8 @@ export const mediumImportUrl = (liveUrl) => `https://medium.com/p/import?url=${e
 export const isMediumUrl = (value) => {
   try {
     const u = new URL(value);
-    return u.protocol === 'https:' && (u.hostname === 'medium.com' || u.hostname.endsWith('.medium.com'));
+    // /p/import (panelin actigi aktarma sayfasi) yazinin kendisi degildir.
+    return u.protocol === 'https:' && (u.hostname === 'medium.com' || u.hostname.endsWith('.medium.com')) && !u.pathname.startsWith('/p/import');
   } catch {
     return false;
   }

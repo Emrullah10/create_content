@@ -1,3 +1,6 @@
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import api from '@api';
 import { Card, Link, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +11,7 @@ import LoadingBlock from '@components/LoadingBlock/LoadingBlock';
 import ErrorAlert from '@components/ErrorAlert/ErrorAlert';
 import { ROUTE_PATHS } from '@shared/constant/route-paths';
 import { formatDateTime } from '@utils/format';
-import { usePublications, useRetryPublications } from './hooks/usePublications';
+import { usePublications, useRetryPublications, useSyncPublications } from './hooks/usePublications';
 
 const PLATFORM_LABEL = { devto: 'dev.to', medium: 'Medium' };
 
@@ -16,11 +19,17 @@ export default function PublicationsPage() {
   const { t } = useTranslation();
   const { data, isLoading, error } = usePublications();
   const retry = useRetryPublications();
+  const sync = useSyncPublications();
   const items = data?.items ?? [];
+  // dev.to panelinden elle yayina alinanlari sayfa acilinca yansit (sessiz: yalniz okur).
+  const qc = useQueryClient();
+  useEffect(() => {
+    api.syncPublications().then((r) => r?.updated && qc.invalidateQueries()).catch(() => {});
+  }, [qc]);
 
   return (
     <>
-      <PageHeader title={t('publications.title')} subtitle={t('publications.subtitle')} actions={<MuiButton variant="outlined" loading={retry.isPending} onClick={() => retry.mutate()}>{t('publications.retry')}</MuiButton>} />
+      <PageHeader title={t('publications.title')} subtitle={t('publications.subtitle')} actions={<><MuiButton variant="outlined" loading={sync.isPending} onClick={() => sync.mutate()} sx={{ mr: 1 }}>{t('publications.sync')}</MuiButton><MuiButton variant="outlined" loading={retry.isPending} onClick={() => retry.mutate()}>{t('publications.retry')}</MuiButton></>} />
       <ErrorAlert error={error} sx={{ mb: 2 }} />
       {isLoading ? (
         <LoadingBlock />

@@ -46,10 +46,12 @@ export default {
   publishing: {
     needApproval: 'Approve the article first, then publish it here.', draft: 'Create dev.to draft', updateDraft: 'Update dev.to draft', live: 'Publish live', done: 'Done',
     devtoNote: 'Publishing is idempotent: the same article is never posted twice.', mediumWait: 'Medium opens after the article is live on dev.to.',
-    mediumSteps: 'Medium has no publishing API. Open the import page, import the live dev.to post (it keeps the canonical link), then paste the Medium URL here.', mediumOpen: 'Open Medium import', mediumUrl: 'Medium URL',
+    mediumSteps: 'Medium has no publishing API. Open the import page, import the live dev.to post (it keeps the canonical link), then paste the Medium URL here.', mediumOpen: 'Copy link and open Medium', mediumCopied: 'dev.to link copied: paste it into the Medium field', mediumUrl: 'Medium URL',
   },
-  publications: { title: 'Publications', subtitle: 'Status per platform', retry: 'Retry failed', retried: 'Retry finished', platform: 'Platform', link: 'Link', open: 'Open' },
+  publications: { title: 'Publications', subtitle: 'Status per platform', retry: 'Retry failed', retried: 'Retry finished', sync: 'Sync with dev.to', synced: 'dev.to status synced', platform: 'Platform', link: 'Link', open: 'Open' },
+  auth: { password: 'Password', login: 'Sign in', logout: 'Sign out' },
   apiErrors: {
+    LOGIN_INVALID: 'Wrong password.', LOGIN_RATE_LIMITED: 'Too many attempts. Wait a bit.',
     UNKNOWN: 'Something went wrong.', VALIDATION_ERROR: 'Invalid input.', NOT_FOUND: 'Not found.', ALREADY_EXISTS: 'A record with the same value already exists.', REFERENCE_NOT_FOUND: 'Referenced record does not exist.',
     HOST_NOT_ALLOWED: 'Request blocked: unexpected host.', ORIGIN_NOT_ALLOWED: 'Request blocked: unexpected origin.', UNAUTHENTICATED: 'Not signed in.', PERMISSION_DENIED: 'Permission denied.',
     THEME_NOT_FOUND: 'Theme not found.', THEME_CODE_REQUIRED: 'Theme is required.', THEME_NAME_REQUIRED: 'Theme name is required.', THEME_NAME_TOO_LONG: 'Theme name is too long.', THEME_WEIGHT_INVALID: 'Weight must be between 1 and 10.',

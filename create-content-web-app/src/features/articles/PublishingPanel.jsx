@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Card, CardContent, Link, Stack, Typography } from '@mui/material';
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
+import { useSnackbar } from 'notistack';
 import MuiButton from '@components/MuiButton/MuiButton';
 import MuiTextInput from '@components/MuiTextInput/MuiTextInput';
 import StatusChip from '@components/StatusChip/StatusChip';
@@ -10,12 +11,20 @@ import { usePublishDevto, useConfirmMedium } from './hooks/useArticles';
 // dev.to (taslak/canli) ve Medium (dev.to canli olduktan sonra manuel import) yayin paneli.
 export default function PublishingPanel({ article, publications }) {
   const { t } = useTranslation();
+  const { enqueueSnackbar } = useSnackbar();
   const code = article.articleCode;
   const publish = usePublishDevto(code);
   const confirm = useConfirmMedium(code);
   const [mediumUrl, setMediumUrl] = useState('');
   const devto = publications.find((p) => p.publicationPlatform === 'devto');
   const medium = publications.find((p) => p.publicationPlatform === 'medium');
+  // Medium import sayfasi ?url= parametresini artik doldurmuyor: dev.to adresini panoya kopyalayip sayfayi aciyoruz, kullanici yapistirir.
+  const openMediumImport = () => {
+    window.open('https://medium.com/p/import', '_blank', 'noopener,noreferrer');
+    const url = devto?.publicationExternalUrl;
+    if (!url) return;
+    navigator.clipboard?.writeText(url).then(() => enqueueSnackbar(t('publishing.mediumCopied'), { variant: 'success' }), () => {});
+  };
   const canPublish = article.articleStatus === 'approved';
 
   return (
@@ -47,7 +56,7 @@ export default function PublishingPanel({ article, publications }) {
         ) : (
           <Stack spacing={1.5}>
             <Typography variant="body2">{t('publishing.mediumSteps')}</Typography>
-            {medium?.publicationMetadata?.importUrl && <MuiButton component="a" href={medium.publicationMetadata.importUrl} target="_blank" rel="noreferrer noopener" variant="outlined" endIcon={<ArrowSquareOut />} sx={{ alignSelf: 'flex-start' }}>{t('publishing.mediumOpen')}</MuiButton>}
+            <MuiButton onClick={openMediumImport} variant="outlined" endIcon={<ArrowSquareOut />} sx={{ alignSelf: 'flex-start' }}>{t('publishing.mediumOpen')}</MuiButton>
             {medium?.publicationStatus === 'published' ? (
               <Link href={medium.publicationExternalUrl} target="_blank" rel="noreferrer noopener">{medium.publicationExternalUrl}</Link>
             ) : (

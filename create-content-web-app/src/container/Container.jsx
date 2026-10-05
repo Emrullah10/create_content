@@ -3,6 +3,7 @@ import ThemeProvider from '@shared/providers/ThemeProvider';
 import NotificationProvider from '@shared/providers/NotificationProvider';
 import QueryProvider from '@shared/providers/QueryProvider';
 import App from '@router/App';
+import AuthGate from '@features/auth/AuthGate';
 
 // Provider sirasi (sablon §16.3): Theme -> Notification -> Query -> Router -> App
 export default function Container() {
@@ -11,7 +12,9 @@ export default function Container() {
       <NotificationProvider>
         <QueryProvider>
           <BrowserRouter basename={import.meta.env.BASE_URL}>
-            <App />
+            <AuthGate>
+              <App />
+            </AuthGate>
           </BrowserRouter>
         </QueryProvider>
       </NotificationProvider>

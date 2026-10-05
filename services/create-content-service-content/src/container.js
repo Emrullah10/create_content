@@ -35,7 +35,7 @@ import { makeArticlePipeline } from './application/orchestrators/article-pipelin
 import { makeRunPipelineJob } from './application/use-cases/job/run-pipeline-job.use-case.js';
 import { makeGetDashboard } from './application/use-cases/job/get-dashboard.use-case.js';
 import { makePublishToDevto } from './application/use-cases/publication/publish-to-devto.use-case.js';
-import { makeListPublications, makeConfirmMediumImport, makeRetryPublications } from './application/use-cases/publication/publication-actions.use-case.js';
+import { makeListPublications, makeConfirmMediumImport, makeRetryPublications, makeSyncPublications } from './application/use-cases/publication/publication-actions.use-case.js';
 import { makeListArticles, makeGetArticle, makeUpdateArticle, makeApproveArticle, makeRetryAssets, makeAbandonArticle } from './application/use-cases/article/article-actions.use-case.js';
 
 // Composition root: DI kutuphanesi yok, her use-case bir make<Eylem>(deps) fabrikasi.
@@ -63,7 +63,7 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
     renderer: lazyPort('renderer', ['validateMermaid', 'renderMermaidToPng']),
     imageGenerator: lazyPort('imageGenerator', ['generateCover']),
     assetHost: lazyPort('assetHost', ['upload']),
-    devto: lazyPort('devto', ['create', 'update', 'findByTitle']),
+    devto: lazyPort('devto', ['create', 'update', 'findByTitle', 'listMine']),
     ...ports,
   };
   const systemPrompt = loadPrompt('system-writer');
@@ -108,6 +108,7 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
     confirmMediumImport: makeConfirmMediumImport(deps),
     list: makeListPublications(deps),
     retryFailed: makeRetryPublications({ ...deps, publish: publishToDevto }),
+    sync: makeSyncPublications({ ...deps, devto: p.devto }),
   };
   const pipelineRaw = {
     runDaily: jobs.runDaily,

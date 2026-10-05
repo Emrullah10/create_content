@@ -70,6 +70,7 @@ describe('dev.to yükü', () => {
     expect(isMediumUrl('https://medium.com/@a/b')).toBe(true);
     expect(isMediumUrl('https://x.medium.com/b')).toBe(true);
     expect(isMediumUrl('https://notmedium.com/b')).toBe(false);
+    expect(isMediumUrl('https://medium.com/p/import?url=https%3A%2F%2Fdev.to%2Fx')).toBe(false);
     expect(isMediumUrl('https://medium.com.evil.io/b')).toBe(false);
     expect(mediumImportUrl('https://dev.to/a b')).toBe('https://medium.com/p/import?url=https%3A%2F%2Fdev.to%2Fa%20b');
   });

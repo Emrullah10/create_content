@@ -40,3 +40,5 @@ Biçim: `[YYYY-MM-DD] Karar — gerekçe — nasıl geri alınır`. Mimari kayna
 - Eski DB `create_content_old_20261004` olarak duruyor (silinmedi) + `backups/create_content-2026-10-04.dump`; kullanıcı onayıyla `DROP DATABASE`.
 - dev.to'ya ilk GERÇEK gönderim (DEVTO_PUBLISH_MODE=draft ile; kullanıcı onayıyla).
 - GitHub assets yüklemesinin gerçek ilk denemesi (şu ana kadar yalnız sahte host ile doğrulandı).
+
+- [2026-10-05] Panel girişi: `PANEL_PASSWORD` varsa `panel-auth-middleware` (HMAC imzalı HttpOnly cerez, durumsuz, 5 hatada 429); yoksa kapalı. dev.to'da elle yayına alınan taslaklar `POST /v1/publications/sync` ile (panel Yayınlar sayfası açılınca da) yerel kayda yansır.

@@ -41,6 +41,16 @@ export const makeDevtoPublisher = ({ apiKey, fetchImpl = fetch, rateLimiter = ma
   return {
     create: async (payload) => shape(await call('POST', '/articles', { article: payload })),
     update: async (id, payload) => shape(await call('PUT', `/articles/${id}`, { article: payload })),
+    // Kullanicinin tum makaleleri (yayinlanmis + taslak): dev.to'da elle yayina alinanlari yerel kayda yansitmak icin.
+    listMine: async () => {
+      const out = [];
+      for (let page = 1; page <= 5; page += 1) {
+        const list = await call('GET', `/articles/me/all?per_page=100&page=${page}`);
+        out.push(...(list || []).map(shape));
+        if (!list || list.length < 100) break;
+      }
+      return out;
+    },
     // Kullanicinin kendi makaleleri (yayinlanmis + taslak) arasinda ayni baslik: yarim kalan bir POST'u tespit eder.
     findByTitle: async (title) => {
       for (let page = 1; page <= 3; page += 1) {

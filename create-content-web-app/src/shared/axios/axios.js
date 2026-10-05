@@ -10,4 +10,13 @@ export const unwrap = (response) => {
   return body && typeof body === 'object' && !Array.isArray(body) && 'success' in body ? body.data : body;
 };
 
+
+
+// Oturum dustuyse (cerez suresi doldu) giris ekranina don: session sorgusu yeniden okunur. Giris istegi kendisi 401 dondurebilir, dokunma.
+http.interceptors.response.use(undefined, (error) => {
+  const url = error?.config?.url || '';
+  if (error?.response?.status === 401 && !url.startsWith('/auth/')) window.dispatchEvent(new Event('cc-unauthenticated'));
+  return Promise.reject(error);
+});
+
 export default http;

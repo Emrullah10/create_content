@@ -46,10 +46,12 @@ export default {
   publishing: {
     needApproval: 'Önce makaleyi onaylayın, sonra buradan yayınlayın.', draft: 'dev.to taslağı oluştur', updateDraft: 'dev.to taslağını güncelle', live: 'Canlı yayınla', done: 'Tamamlandı',
     devtoNote: 'Yayın idempotent’tir: aynı makale iki kez gönderilmez.', mediumWait: 'Medium, makale dev.to’da canlı olduktan sonra açılır.',
-    mediumSteps: 'Medium’un yayın API’si yok. İçe aktarma sayfasını açın, canlı dev.to yazısını içe aktarın (kanonik bağlantı korunur), sonra Medium adresini buraya yapıştırın.', mediumOpen: 'Medium içe aktarmayı aç', mediumUrl: 'Medium adresi',
+    mediumSteps: 'Medium’un yayın API’si yok. Düğme dev.to adresini kopyalayıp Medium’un içe aktarma sayfasını açar: adresi alana yapıştırıp içe aktarın (kanonik bağlantı korunur), sonra Medium adresini buraya yapıştırın.', mediumOpen: 'Adresi kopyala ve Medium’u aç', mediumCopied: 'dev.to adresi kopyalandı: Medium’da alana yapıştırın', mediumUrl: 'Medium adresi',
   },
-  publications: { title: 'Yayınlar', subtitle: 'Platform bazında durum', retry: 'Başarısızları yeniden dene', retried: 'Yeniden deneme tamamlandı', platform: 'Platform', link: 'Bağlantı', open: 'Aç' },
+  publications: { title: 'Yayınlar', subtitle: 'Platform bazında durum', retry: 'Başarısızları yeniden dene', retried: 'Yeniden deneme tamamlandı', sync: 'dev.to ile eşitle', synced: 'dev.to durumu eşitlendi', platform: 'Platform', link: 'Bağlantı', open: 'Aç' },
+  auth: { password: 'Parola', login: 'Giriş yap', logout: 'Çıkış' },
   apiErrors: {
+    LOGIN_INVALID: 'Parola hatalı.', LOGIN_RATE_LIMITED: 'Çok fazla deneme. Biraz bekleyin.',
     UNKNOWN: 'Bir şeyler ters gitti.', VALIDATION_ERROR: 'Geçersiz girdi.', NOT_FOUND: 'Bulunamadı.', ALREADY_EXISTS: 'Aynı değere sahip bir kayıt zaten var.', REFERENCE_NOT_FOUND: 'Başvurulan kayıt yok.',
     HOST_NOT_ALLOWED: 'İstek engellendi: beklenmeyen host.', ORIGIN_NOT_ALLOWED: 'İstek engellendi: beklenmeyen origin.', UNAUTHENTICATED: 'Oturum açılmamış.', PERMISSION_DENIED: 'Yetki yok.',
     THEME_NOT_FOUND: 'Tema bulunamadı.', THEME_CODE_REQUIRED: 'Tema gerekli.', THEME_NAME_REQUIRED: 'Tema adı gerekli.', THEME_NAME_TOO_LONG: 'Tema adı çok uzun.', THEME_WEIGHT_INVALID: 'Ağırlık 1 ile 10 arasında olmalı.',

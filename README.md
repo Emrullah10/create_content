@@ -56,7 +56,7 @@ Roller `.env` ile ayarlanır (`LLM_WRITER_*`, `LLM_JUDGE_*`, `LLM_UTILITY_*`; Op
 └── env/ .env (chmod 600) · migration.env · keys/
 ```
 
-`npm run update` (build → migration → pm2). Panel statik olarak `create-content-web-app/dist` altından, `/api` servise proxy'lenerek sunulur. **Servis kimlik doğrulaması içermez**: yalnızca loopback'e bağlanır ve Host/Origin denetimi yapar. İnternete açmadan önce oturum katmanı eklenmelidir (`docs/DECISIONS.md`, BEKLİYOR).
+`npm run update` (build → migration → pm2). Panel statik olarak `create-content-web-app/dist` altından, `/api` servise proxy'lenerek sunulur. Giriş: `.env`'de `PANEL_PASSWORD` tanımlıysa panel parola ister (HttpOnly cerez, 7 gün); boşsa giriş yoktur (yerel). Sunucuda mutlaka `PANEL_PASSWORD`, `ALLOWED_HOSTS` ve `PANEL_ORIGINS` verin, TLS'i nginx sonlandırsın ve `Host` başlığını iletsin.
 
 ## Sorun giderme
 
