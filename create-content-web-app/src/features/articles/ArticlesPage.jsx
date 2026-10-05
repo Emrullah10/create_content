@@ -1,5 +1,5 @@
-import { Card, Tab, Tabs, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Card, Link, Tab, Tabs, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@components/PageHeader/PageHeader';
 import StatusChip from '@components/StatusChip/StatusChip';
@@ -14,6 +14,7 @@ const TABS = ['all', 'drafting', 'needs_assets', 'review', 'approved', 'publishe
 
 export default function ArticlesPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const status = TABS.includes(params.get('status')) ? params.get('status') : 'all';
   const { data, isLoading, error } = useArticles(status === 'all' ? {} : { status });
@@ -37,8 +38,8 @@ export default function ArticlesPage() {
             <TableBody>
               {items.length === 0 && <TableRow><TableCell colSpan={5}>{t('common.empty')}</TableCell></TableRow>}
               {items.map((a) => (
-                <TableRow key={a.articleCode} hover component={RouterLink} to={ROUTE_PATHS.article(a.articleCode)} sx={{ textDecoration: 'none' }}>
-                  <TableCell sx={{ maxWidth: 520 }}><Typography fontWeight={600} color="text.primary">{a.articleTitle}</Typography><Typography variant="caption" color="text.secondary">{a.articleSlug}</Typography></TableCell>
+                <TableRow key={a.articleCode} hover onClick={() => navigate(ROUTE_PATHS.article(a.articleCode))} sx={{ cursor: 'pointer' }}>
+                  <TableCell sx={{ maxWidth: 520 }}><Link component={RouterLink} to={ROUTE_PATHS.article(a.articleCode)} underline="hover" color="text.primary" fontWeight={600} onClick={(e) => e.stopPropagation()}>{a.articleTitle}</Link><br /><Typography variant="caption" color="text.secondary">{a.articleSlug}</Typography></TableCell>
                   <TableCell><StatusChip status={a.articleStatus} /></TableCell>
                   <TableCell><ScoreChip score={a.articleQualityScore} /></TableCell>
                   <TableCell>{a.articlePipelineStage ?? '-'}</TableCell>

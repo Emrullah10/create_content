@@ -1,4 +1,4 @@
-import { Alert, Box, Card, CardContent, Chip, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Alert, Box, Card, CardActionArea, CardContent, Chip, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { Play } from '@phosphor-icons/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,11 +15,13 @@ const ARTICLE_STATUSES = ['drafting', 'needs_assets', 'review', 'approved', 'pub
 const TOPIC_STATUSES = ['suggested', 'approved', 'drafting', 'used'];
 
 const CountCard = ({ label, value, to }) => (
-  <Card variant="outlined" component={to ? RouterLink : 'div'} to={to} sx={{ textDecoration: 'none' }}>
-    <CardContent>
-      <Typography variant="h4" fontWeight={800}>{value ?? 0}</Typography>
-      <Typography variant="body2" color="text.secondary">{label}</Typography>
-    </CardContent>
+  <Card variant="outlined">
+    <CardActionArea component={RouterLink} to={to} sx={{ height: '100%' }}>
+      <CardContent>
+        <Typography variant="h4" fontWeight={800}>{value ?? 0}</Typography>
+        <Typography variant="body2" color="text.secondary">{label}</Typography>
+      </CardContent>
+    </CardActionArea>
   </Card>
 );
 
