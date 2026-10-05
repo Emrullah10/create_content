@@ -28,7 +28,15 @@ Biçim: `[YYYY-MM-DD] Karar — gerekçe — nasıl geri alınır`. Mimari kayna
 - [2026-10-04] Veritabanı pg_dump ile yedeklenip sıfırdan kurulur (`backups/`, gitignore'da) — kullanıcı kararı — `pg_restore`.
 - [2026-10-04] Medium: dev.to canlı olduktan sonra panelden import linki (API token verilmiyor) — resmi yol yok.
 
+- [2026-10-05] Yazar nemotron-3-ultra-550b, hakem+yardımcı nemotron-3-super-120b (llama-3.3 NVIDIA'dan kalktı) — gerçek koşuda ölçüldü — .env'de LLM_<ROL>_MODEL.
+- [2026-10-05] Konu benzerliği yalnız pg_trgm + dedup_key (planlanan ek LLM benzerlik çağrısı yapılmadı) — maliyet/sadelik, trgm yeterli — gerekirse generate-topics'e LLM kontrolü eklenir.
+- [2026-10-05] Asset'ler diske yazılmadan render→yükle akışıyla işlenir (tmp dosya yok); yeniden deneme yalnız `uploaded` olmayanları işler — eski tmp-dizin hatası kökten kalktı.
+- [2026-10-05] E2E Docker'sız: ayrı DB (`create_content_e2e`), ayrı portlar (3199/5275), LLM_PROVIDER=fake; Playwright puppeteer'ın Chrome'unu kullanır.
+- [2026-10-05] CI'da E2E yok (Chrome gerektirir); lint + web + backend (postgres:15) + build koşar.
+
 ## BEKLİYOR
 - Sunucuya taşıma ve auth katmanı.
 - dev.to'ya ilk gerçek gönderim (kullanıcı onayıyla).
-- Eski `create_content` DB'sinin drop edilmesi (Faz 3, yedek alındı: `backups/create_content-2026-10-04.dump`).
+- Eski DB `create_content_old_20261004` olarak duruyor (silinmedi) + `backups/create_content-2026-10-04.dump`; kullanıcı onayıyla `DROP DATABASE`.
+- dev.to'ya ilk GERÇEK gönderim (DEVTO_PUBLISH_MODE=draft ile; kullanıcı onayıyla).
+- GitHub assets yüklemesinin gerçek ilk denemesi (şu ana kadar yalnız sahte host ile doğrulandı).
