@@ -11,6 +11,7 @@ export const LLM_ROLE = Object.freeze({
   'revise-section': 'writer',
   editor: 'judge',
   judge: 'judge',
+  improve: 'judge',
   'code-fix': 'utility',
   'diagram-repair': 'utility',
 });

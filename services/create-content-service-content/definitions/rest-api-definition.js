@@ -153,6 +153,7 @@ Object.assign(customPaths, {
   '/v1/publications/retry': op({ summary: 'Retry failed dev.to publications now', functionName: 'postPublicationsRetry', tag: 'Publication', permission: PERMISSIONS.contentPublish }),
   '/v1/pipeline/run': op({ summary: 'Write the next (or a given) approved topic now, in the background', functionName: 'postPipelineRun', tag: 'Pipeline', permission: PERMISSIONS.contentRun, requestBodyRef: 'pipelineRunRequest', requestRequired: false }),
   '/v1/pipeline/articles/{articleCode}/resume': op({ summary: 'Resume a failed article from the stage where it stopped', functionName: 'postPipelineResume', tag: 'Pipeline', permission: PERMISSIONS.contentRun, pathParams: [articleCode] }),
+  '/v1/pipeline/articles/{articleCode}/improve': op({ summary: 'Re-score a below-threshold article that was never auto-improved and run the improvement rounds, in the background', functionName: 'postPipelineImprove', tag: 'Pipeline', permission: PERMISSIONS.contentRun, pathParams: [articleCode] }),
 });
 
 export default {

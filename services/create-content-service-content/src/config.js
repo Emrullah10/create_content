@@ -4,6 +4,8 @@ const int = (v, d) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? 
 export const readContentConfig = (env = process.env) => ({
   qualityThreshold: int(env.QUALITY_THRESHOLD, 75),
   qualityMaxRounds: int(env.QUALITY_MAX_ROUNDS, 2),
+  // Puan esigin altindaysa hakem-geri-bildirimli yeniden yazim + yeniden puanlama turu (0 = kapali).
+  qualityImproveRounds: int(env.QUALITY_IMPROVE_ROUNDS, 2),
   judgeSamples: int(env.JUDGE_SAMPLES, 3),
   topicSuggestedMax: int(env.TOPIC_SUGGESTED_MAX, 15),
   devtoPublishMode: env.DEVTO_PUBLISH_MODE === 'live' ? 'live' : 'draft',

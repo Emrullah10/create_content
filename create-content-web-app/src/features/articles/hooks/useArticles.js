@@ -15,6 +15,7 @@ export const useUpdateArticle = (code, { onDone } = {}) => useApiMutation({ muta
 export const useApproveArticle = (code, { onDone } = {}) => useApiMutation({ mutationFn: (override) => api.approveArticle(code, override), invalidate: refresh(code), successKey: 'articles.approvedMsg', onSuccess: onDone });
 export const useRetryAssets = (code) => useApiMutation({ mutationFn: () => api.retryArticleAssets(code), invalidate: refresh(code), successKey: 'articles.assetsRetried' });
 export const useResumeArticle = (code) => useApiMutation({ mutationFn: () => api.resumeArticle(code), invalidate: refresh(code), successKey: 'dashboard.started' });
+export const useImproveArticle = (code) => useApiMutation({ mutationFn: () => api.improveArticle(code), invalidate: refresh(code), successKey: 'articles.improveStarted' });
 export const useAbandonArticle = (code, { onDone } = {}) => useApiMutation({ mutationFn: (rewrite) => api.abandonArticle(code, rewrite), invalidate: refresh(code), successKey: 'articles.abandoned', onSuccess: onDone });
 export const usePublishDevto = (code) => useApiMutation({ mutationFn: (mode) => api.publishToDevto(code, mode), invalidate: [...refresh(code), ['publications']], successKey: 'publishing.done' });
 export const useConfirmMedium = (code) => useApiMutation({ mutationFn: (url) => api.confirmMediumImport(code, url), invalidate: [...refresh(code), ['publications']], successKey: 'common.saved' });

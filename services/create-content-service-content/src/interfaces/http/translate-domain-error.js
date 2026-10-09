@@ -1,3 +1,4 @@
+import OpenAI from 'openai';
 import { badRequest, conflict, notFound, serverError, serviceUnavailable } from 'app-shared';
 import { DomainError } from '../../domain/errors/domain-error.js';
 import { InfrastructureError } from '../../domain/errors/infrastructure-error.js';
@@ -39,6 +40,7 @@ export const CODE_TO_FACTORY = Object.freeze({
   ARTICLE_NOT_RETRYABLE: conflict,
   ARTICLE_NOT_DELETABLE: conflict,
   ARTICLE_NOT_RESUMABLE: conflict,
+  ARTICLE_NOT_IMPROVABLE: conflict,
   ARTICLE_NOT_DRAFTING: conflict,
   // yayin
   PUBLISH_MODE_INVALID: badRequest,
@@ -60,6 +62,8 @@ export const toHttpError = (err) => {
     return factory(err.code, err.message, err.details);
   }
   if (err instanceof InfrastructureError) return (CODE_TO_FACTORY[err.code] || serverError)(err.code || 'INTERNAL_ERROR', err.message);
+  // LLM saglayicisi (NVIDIA vb.) 5xx/429/zaman asimi/baglanti hatasi: genel 500 yerine aciklayici 503 (tekrar denenebilir).
+  if (err instanceof OpenAI.OpenAIError) return serviceUnavailable('LLM_UPSTREAM_FAILED', `LLM provider error${err.status ? ` (HTTP ${err.status})` : ''}: ${err.message}`.slice(0, 300));
   if (err?.code === PG_UNIQUE_VIOLATION) return conflict('ALREADY_EXISTS', 'A record with the same unique value already exists');
   if (err?.code === PG_FK_VIOLATION) return badRequest('REFERENCE_NOT_FOUND', 'Referenced record does not exist');
   return err;

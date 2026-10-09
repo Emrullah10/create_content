@@ -1,4 +1,4 @@
-import { findBannedPhrases, findUnsupportedNumbers, DEFAULT_THRESHOLDS } from './quality-checks.js';
+import { findBannedPhrases, findLeftovers, findUnsupportedNumbers, DEFAULT_THRESHOLDS } from './quality-checks.js';
 import { countCodeBlocks, countDiagramBlocks, hasTable, wordCount } from './markdown.js';
 
 // Kalite kontrolu basarisizliklarini BOLUM BAZLI duzeltme gorevlerine cevirir (redaktor LLM'inin sorunlariyla birlestirilir).
@@ -53,7 +53,7 @@ export const issuesFromChecks = ({ checkResult, sections, allowedText = '', thre
     }
   }
   if (failed.has('leftovers')) {
-    for (const s of sections.filter((x) => /\bTODO\b|\bFIXME\b|\[\.\.\.\]|lorem ipsum|\{\{(?!DIAGRAM_)/i.test(x.body))) add(s, 'Leftover markers (TODO/placeholder text).', 'Remove or complete the unfinished text.');
+    for (const s of sections.filter((x) => findLeftovers(x.body).length || /\{\{(?!DIAGRAM_)/.test(x.body))) add(s, 'Leftover markers (TODO/placeholder text).', 'Remove or complete the unfinished text.');
   }
   return issues;
 };

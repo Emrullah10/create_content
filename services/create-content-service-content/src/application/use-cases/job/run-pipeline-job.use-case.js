@@ -1,10 +1,11 @@
 import { PERMISSIONS, requireCallerPermission } from 'app-shared';
 import { DomainError } from '../../../domain/errors/domain-error.js';
 import { slugify } from '../../../domain/article/markdown.js';
+import { canImprove, IMPROVABLE_STATUSES } from '../../../domain/article/improvement.js';
 
 // Pipeline'i bir job_run kaydi + Postgres advisory kilidi icinde calistirir. HTTP'den tetiklenince ARKA PLANDA kosar (istek
 // beklemez; panel durumu yoklar), cron'dan `wait:true` ile beklenir. Ayni anda tek makale yazilir (kilit).
-export const makeRunPipelineJob = ({ pipeline, topicRepo, articleRepo, jobRunRepo, withLock, isLlmConfigured, logger = console }) => {
+export const makeRunPipelineJob = ({ pipeline, topicRepo, articleRepo, jobRunRepo, withLock, isLlmConfigured, qualityThreshold = 75, logger = console }) => {
   for (const [n, d] of Object.entries({ pipeline, topicRepo, articleRepo, jobRunRepo, withLock, isLlmConfigured })) if (!d) throw new Error(`makeRunPipelineJob requires { ${n} }`);
 
   const execute = async ({ jobName, jobRunId, lockKey, work }) => {
@@ -75,6 +76,26 @@ export const makeRunPipelineJob = ({ pipeline, topicRepo, articleRepo, jobRunRep
       if (!article) throw new DomainError('ARTICLE_NOT_FOUND', 'article not found');
       if (!['failed', 'drafting'].includes(article.articleStatus)) throw new DomainError('ARTICLE_NOT_RESUMABLE', `only failed or drafting articles can be resumed (status: ${article.articleStatus})`);
       return launch({ jobName: 'resume-article', lockKey: 'job:content-pipeline', wait, work: async () => ({ articleCode, ...(await pipeline.run({ articleId: article.articleId })) }) });
+    },
+
+    // Panelden: otomatik iyilestirme calismamis, esigin altindaki makaleyi `score` asamasindan yeniden kosturur
+    // (yeniden kor puanlama + iyilestirme turlari), ardindan gorseller ve sonlandirma yeniden yapilir.
+    improveArticle: async ({ caller, articleCode, wait = false } = {}) => {
+      guard(caller);
+      if (!articleCode) throw new DomainError('ARTICLE_CODE_REQUIRED', 'articleCode is required');
+      const article = await articleRepo.findByCode({ articleCode });
+      if (!article) throw new DomainError('ARTICLE_NOT_FOUND', 'article not found');
+      if (!canImprove(article, qualityThreshold)) throw new DomainError('ARTICLE_NOT_IMPROVABLE', `only review/needs_assets articles below the threshold (${qualityThreshold}) that were never auto-improved can be improved`);
+      return launch({
+        jobName: 'improve-article',
+        lockKey: 'job:content-pipeline',
+        wait,
+        work: async () => {
+          const moved = await articleRepo.transition({ articleId: article.articleId, from: IMPROVABLE_STATUSES, to: 'drafting', patch: { pipelineStage: 'revise', error: null } });
+          if (!moved) return { ok: true, skipped: true, reason: 'article status changed before the job started' };
+          return { articleCode, ...(await pipeline.run({ articleId: article.articleId })) };
+        },
+      });
     },
   };
 };

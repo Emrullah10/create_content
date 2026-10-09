@@ -89,6 +89,69 @@ describe('uçtan uca pipeline (sahte LLM + sahte portlar, gerçek DB)', () => {
     expect((await container.repos.jobRunRepo.latest({}))[0]).toMatchObject({ jobRunStatus: 'succeeded' });
   }, 60_000);
 
+  const judgeAll = (n) => () => ({ technical_depth_reasoning: 'x', technical_depth: n, structural_richness_reasoning: 'x', structural_richness: n, clarity_reasoning: 'x', clarity: n, originality_reasoning: 'x', originality: n, strengths: ['s'], weaknesses: ['Claims are vague'] });
+  const useImproveFakes = (fake, { afterScore }) => {
+    fake.handlers.improve = () => ({ issues: [{ sectionHeading: 'Where it breaks', problem: 'The failure scenario is vague.', fix: 'Name the exact error.', severity: 'high' }] });
+    fake.handlers['revise-section'] = (r) => `${r.meta.body}\n\nIMPROVED the failure now names the exact error and the broken behaviour.`;
+    fake.handlers.judge = (r) => (r.prompt.includes('IMPROVED') ? judgeAll(afterScore)() : judgeAll(2)());
+  };
+
+  test('skor eşiğin altında: hakem eleştirisiyle bölüm yeniden yazılır, yeniden puanlanır ve daha iyi sürüm tutulur', async () => {
+    const { container, fake } = setup();
+    useImproveFakes(fake, { afterScore: 4 });
+    await seedApprovedTopic(container);
+    await container.useCases.pipeline.runDaily({ caller: SYSTEM_CALLER, wait: true });
+
+    const { article: a } = await onlyArticle(container);
+    expect(a.articleQualityScore).toBe(80);
+    expect(a.articleQualityReport.initialScore).toBe(40);
+    expect(a.articleQualityReport.improveRounds).toEqual([expect.objectContaining({ round: 1, before: 40, after: 80, kept: true, changed: ['Where it breaks'] })]);
+    expect(a.articleBodyMarkdown).toContain('IMPROVED');
+    // Hakem eleştirisi yalnız 'improve' prompt'una gider; hakem kör kalır.
+    expect(fake.calls.find((c) => c.stage === 'improve').prompt).toContain('Claims are vague');
+    for (const c of fake.calls.filter((x) => x.stage === 'judge')) expect(c.prompt).not.toMatch(/Claims are vague|initialScore/);
+  }, 60_000);
+
+  test('yeniden yazım daha düşük puan alırsa bölümler eski haline döner ve döngü durur', async () => {
+    const { container, fake } = setup();
+    useImproveFakes(fake, { afterScore: 1 });
+    await seedApprovedTopic(container);
+    await container.useCases.pipeline.runDaily({ caller: SYSTEM_CALLER, wait: true });
+
+    const { article: a } = await onlyArticle(container);
+    expect(a.articleQualityScore).toBe(40);
+    expect(a.articleQualityReport.improveRounds).toEqual([expect.objectContaining({ round: 1, before: 40, after: 20, kept: false })]);
+    expect(a.articleBodyMarkdown).not.toContain('IMPROVED');
+    const sections = await container.repos.sectionRepo.list({ articleId: a.articleId });
+    expect(sections.some((s) => s.body.includes('IMPROVED'))).toBe(false);
+    expect(fake.calls.filter((c) => c.stage === 'improve')).toHaveLength(1);
+  }, 60_000);
+
+  test('panel butonu: otomatik iyileştirme çalışmamış makalede aktif, iyileştirme sonrası pasif', async () => {
+    const { container, fake } = setup();
+    fake.handlers.judge = judgeAll(2);
+    await seedApprovedTopic(container);
+    await container.useCases.pipeline.runDaily({ caller: SYSTEM_CALLER, wait: true });
+    let detail = await onlyArticle(container);
+    expect(detail.improvable).toBe(false); // döngü çalıştı (düzeltilecek bölüm bulamadı) -> pasif
+    await expect(container.useCases.pipeline.improveArticle({ caller: SYSTEM_CALLER, articleCode: detail.article.articleCode })).rejects.toMatchObject({ code: 'ARTICLE_NOT_IMPROVABLE' });
+
+    // Eski kodla puanlanmış makaleyi taklit et: raporda improveRounds yok.
+    const { improveRounds, initialScore, ...legacy } = detail.article.articleQualityReport;
+    await container.repos.articleRepo.update({ articleId: detail.article.articleId, patch: { qualityReport: legacy } });
+    detail = await onlyArticle(container);
+    expect(detail.improvable).toBe(true);
+
+    useImproveFakes(fake, { afterScore: 4 });
+    const out = await container.useCases.pipeline.improveArticle({ caller: SYSTEM_CALLER, articleCode: detail.article.articleCode, wait: true });
+    expect(out).toMatchObject({ ok: true });
+    detail = await onlyArticle(container);
+    expect(detail.article).toMatchObject({ articleStatus: 'review', articlePipelineStage: 'final', articleQualityScore: 80 });
+    expect(detail.article.articleQualityReport.improveRounds).toEqual([expect.objectContaining({ before: 40, after: 80, kept: true })]);
+    expect((detail.article.articleBodyMarkdown.match(/!\[[^\]]*\]\(https:\/\/assets\.example\.test\//g) || []).length).toBe(2); // görseller yeniden gömüldü
+    expect(detail.improvable).toBe(false);
+  }, 60_000);
+
   test('onaylı konu yoksa iş "skipped" kaydı düşer', async () => {
     const { container } = setup();
     expect(await container.useCases.pipeline.runDaily({ caller: SYSTEM_CALLER, wait: true })).toMatchObject({ ok: true, skipped: true });

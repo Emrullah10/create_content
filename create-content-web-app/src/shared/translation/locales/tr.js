@@ -25,6 +25,7 @@ export default {
   articles: {
     title: 'Makaleler', subtitle: 'Her makale burada incelemenizi bekler. Onayınız olmadan hiçbir şey yayınlanmaz.', titleCol: 'Başlık', score: 'Skor', stage: 'Aşama', back: 'Tüm makaleler', body: 'Markdown', approve: 'Onayla', approvedMsg: 'Onaylandı',
     approveAnyway: 'Yine de onayla', overrideTitle: 'Kalite eşiğinin altında', overrideMsg: 'Skor {{score}}, eşik {{threshold}}. Yine de onaylansın mı?', belowThreshold: 'Skor {{score}}, eşik {{threshold}} değerinin altında.',
+    improve: 'Yeniden puanla ve iyileştir', improveStarted: 'Yeniden puanlama ve iyileştirme başladı', improveHint: 'Otomatik iyileştirme bu makalede çalışmadı: makale yeniden kör puanlanır, eşiğin altındaysa hakem eleştirisine göre düzeltilip tekrar puanlanır.', improveDisabledHint: 'Pasif: otomatik iyileştirme zaten çalıştı ya da skor eşiğin üstünde.',
     resume: 'Devam et', retryAssets: 'Görselleri yeniden dene', assetsRetried: 'Görseller yeniden denendi', abandon: 'Vazgeç', abandonTitle: 'Makaleden vazgeç', abandonMsg: 'Makale silinir. Konuyu yeniden yazılmak üzere kuyruğa geri koyabilir ya da reddedebilirsiniz.',
     abandonRewrite: 'Sonra yeniden yaz', abandonDiscard: 'Konuyu da reddet', abandoned: 'Makaleden vazgeçildi', draftingNote: 'Makale yazılıyor; bu sayfa otomatik yenilenir.', needsAssets: '{{count}} görsel başarısız oldu. Onaylamadan önce yeniden deneyin.',
     editResets: 'Onaylı bir makaleyi düzenlerseniz tekrar incelemeye döner.',
@@ -35,6 +36,8 @@ export default {
     checks: 'Otomatik kontroller', passed: 'Geçti', failed: 'Kaldı', code: 'Kod doğrulama', codeSummary: '{{total}} blok, {{validated}} tanesi sözdizimi açısından doğrulandı, {{failed}} hatalı (kod asla çalıştırılmaz)',
     links: 'Bağlantılar', linksSummary: '{{total}} bağlantı, {{trusted}} tanesi doğrulanmış kaynaklardan, {{broken}} kırık', assets: 'Görseller', assetsSummary: '{{uploaded}}/{{diagrams}} diyagram yüklendi, kapak {{cover}}',
     editor: 'Redaktör turları', editorRound: 'Tur {{round}}: {{issues}} sorun, {{changed}} bölüm yeniden yazıldı',
+    improve: 'Otomatik iyileştirme (ilk skor {{initial}})', improveKept: 'Tur {{round}}: {{changed}} bölüm yeniden yazıldı, skor {{before}} → {{after}} (tutuldu)',
+    improveReverted: 'Tur {{round}}: skor {{before}} → {{after}}, artmadığı için eski sürüme dönüldü', improveNoop: 'Tur {{round}}: düzeltilecek bölüm bulunamadı', improveError: 'Tur {{round}}: hata ({{error}}), eski sürüm korundu',
     criteria: { technical_depth: 'Teknik derinlik', structural_richness: 'Yapı', clarity: 'Netlik', originality: 'Özgünlük' },
     check: {
       'word-count': 'Uzunluk', sections: 'Bölümler', 'code-blocks': 'Kod blokları', diagrams: 'Diyagramlar', table: 'Karşılaştırma tablosu', 'unsupported-numbers': 'Kaynaksız rakamlar', 'minor-numbers': 'Kaynaksız nicelikler',
@@ -46,7 +49,7 @@ export default {
   publishing: {
     needApproval: 'Önce makaleyi onaylayın, sonra buradan yayınlayın.', draft: 'dev.to taslağı oluştur', updateDraft: 'dev.to taslağını güncelle', live: 'Canlı yayınla', done: 'Tamamlandı',
     devtoNote: 'Yayın idempotent’tir: aynı makale iki kez gönderilmez.', mediumWait: 'Medium, makale dev.to’da canlı olduktan sonra açılır.',
-    mediumSteps: 'Medium’un yayın API’si yok. Düğme dev.to adresini kopyalayıp Medium’un içe aktarma sayfasını açar: adresi alana yapıştırıp içe aktarın (kanonik bağlantı korunur), sonra Medium adresini buraya yapıştırın.', mediumOpen: 'Adresi kopyala ve Medium’u aç', mediumCopied: 'dev.to adresi kopyalandı: Medium’da alana yapıştırın', mediumUrl: 'Medium adresi',
+    mediumSteps: 'Medium’un yayın API’si yok. Düğme dev.to adresini kopyalayıp Medium’un içe aktarma sayfasını açar: adresi alana yapıştırıp içe aktarın (kanonik bağlantı korunur), sonra Medium adresini buraya yapıştırın.', mediumOpen: 'Adresi kopyala ve Medium’u aç', mediumCopied: 'dev.to adresi kopyalandı: Medium’da alana yapıştırın', mediumCopyFailed: 'Tarayıcı panoya kopyalamaya izin vermedi. Bu adresi elle kopyalayın: {{url}}', mediumUrl: 'Medium adresi',
   },
   publications: { title: 'Yayınlar', subtitle: 'Platform bazında durum', retry: 'Başarısızları yeniden dene', retried: 'Yeniden deneme tamamlandı', sync: 'dev.to ile eşitle', synced: 'dev.to durumu eşitlendi', platform: 'Platform', link: 'Bağlantı', open: 'Aç' },
   auth: { password: 'Parola', login: 'Giriş yap', logout: 'Çıkış' },
@@ -62,10 +65,10 @@ export default {
     ARTICLE_NOT_FOUND: 'Makale bulunamadı.', ARTICLE_CODE_REQUIRED: 'Makale gerekli.', ARTICLE_NOTHING_TO_UPDATE: 'Güncellenecek bir şey yok.', ARTICLE_TITLE_REQUIRED: 'Başlık boş olamaz.', ARTICLE_BODY_REQUIRED: 'İçerik boş olamaz.',
     ARTICLE_NOT_EDITABLE: 'Bu makale mevcut durumunda düzenlenemez.', ARTICLE_NEEDS_ASSETS: 'Onaylamadan önce başarısız görselleri yeniden deneyin.', ARTICLE_BELOW_THRESHOLD: 'Kalite skoru eşiğin altında.',
     ARTICLE_NOT_APPROVABLE: 'Yalnızca incelemedeki makaleler onaylanabilir.', ARTICLE_NOT_RETRYABLE: 'Görseller yalnızca görsel bekleyen makalelerde yeniden denenebilir.', ARTICLE_NOT_DELETABLE: 'Yayınlanmış makaleden vazgeçilemez.',
-    ARTICLE_NOT_RESUMABLE: 'Yalnızca başarısız ya da yarıda kalmış makaleler sürdürülebilir.', ARTICLE_NOT_DRAFTING: 'Süreç yalnızca yazılmakta olan makaleler için çalışır.',
+    ARTICLE_NOT_RESUMABLE: 'Yalnızca başarısız ya da yarıda kalmış makaleler sürdürülebilir.', ARTICLE_NOT_IMPROVABLE: 'Yalnızca eşiğin altında kalan ve otomatik iyileştirme çalışmamış makaleler iyileştirilebilir.', ARTICLE_NOT_DRAFTING: 'Süreç yalnızca yazılmakta olan makaleler için çalışır.',
     PUBLISH_MODE_INVALID: 'Yayın kipi taslak ya da canlı olmalı.', ARTICLE_NOT_PUBLISHABLE: 'Yalnızca onaylı makaleler yayınlanabilir.', ARTICLE_NOT_PUBLISHED: 'Önce dev.to’da canlı yayınlayın.', MEDIUM_URL_INVALID: 'Geçerli bir https://medium.com/... adresi girin.',
     PUBLISH_FAILED: 'dev.to’ya yayın başarısız oldu. Güvenle yeniden denenebilir.',
     LLM_NOT_CONFIGURED: 'LLM yapılandırılmamış. .env içinde LLM_WRITER_* değerlerini girip yeniden başlatın.', PORT_NOT_CONFIGURED: 'Gerekli bir entegrasyon yapılandırılmamış (.env dosyasını kontrol edin).',
-    LLM_TRUNCATED: 'Model çıktısı yarıda kesildi.', LLM_INVALID_JSON: 'Model geçersiz bir yanıt verdi.', LLM_EMPTY_RESPONSE: 'Model boş yanıt verdi.',
+    LLM_UPSTREAM_FAILED: 'LLM sağlayıcısı yanıt vermedi ya da hata döndü. Biraz sonra yeniden deneyin; sürerse `npm run check:llm` ile modelleri doğrulayın.', LLM_TRUNCATED: 'Model çıktısı yarıda kesildi.', LLM_INVALID_JSON: 'Model geçersiz bir yanıt verdi.', LLM_EMPTY_RESPONSE: 'Model boş yanıt verdi.',
   },
 };

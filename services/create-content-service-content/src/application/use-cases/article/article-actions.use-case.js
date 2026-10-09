@@ -1,4 +1,5 @@
 import { PERMISSIONS, requireCallerPermission } from 'app-shared';
+import { canImprove } from '../../../domain/article/improvement.js';
 import { DomainError } from '../../../domain/errors/domain-error.js';
 import { normalizeTags } from '../../../domain/theme/theme-rules.js';
 
@@ -21,7 +22,7 @@ export const makeListArticles = ({ articleRepo }) => async ({ caller, status, li
 };
 
 // Detay: makale + kaynaklar + asset'ler + yayinlar + LLM kullanimi (panel kalite raporu kartlari bunu okur).
-export const makeGetArticle = ({ articleRepo, assetRepo, sourceRepo, publicationRepo, llmCallRepo, revisionRepo }) => async ({ caller, articleCode } = {}) => {
+export const makeGetArticle = ({ articleRepo, assetRepo, sourceRepo, publicationRepo, llmCallRepo, revisionRepo, qualityThreshold = 75 }) => async ({ caller, articleCode } = {}) => {
   requireCallerPermission(caller, PERMISSIONS.contentRead);
   const article = await mustFind(articleRepo, articleCode);
   const { articleId } = article;
@@ -32,7 +33,8 @@ export const makeGetArticle = ({ articleRepo, assetRepo, sourceRepo, publication
     llmCallRepo.summaryByArticle({ articleId }),
     revisionRepo.listByArticle({ articleId }),
   ]);
-  return { article, assets, sources, publications, llmUsage, stages: revisions.map((r) => ({ stage: r.articleRevisionStage, at: r.articleRevisionCreatedAt, content: r.articleRevisionContent })) };
+  // improvable: panelde "Yeniden puanla ve iyileştir" butonu yalniz bu true iken aktif.
+  return { article, improvable: canImprove(article, qualityThreshold), assets, sources, publications, llmUsage, stages: revisions.map((r) => ({ stage: r.articleRevisionStage, at: r.articleRevisionCreatedAt, content: r.articleRevisionContent })) };
 };
 
 // Panelden duzenleme. Onayli makale duzenlenirse tekrar `review`e doner (onay yeniden alinir).

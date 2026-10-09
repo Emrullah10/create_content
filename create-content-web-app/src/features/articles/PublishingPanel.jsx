@@ -7,6 +7,7 @@ import MuiButton from '@components/MuiButton/MuiButton';
 import MuiTextInput from '@components/MuiTextInput/MuiTextInput';
 import StatusChip from '@components/StatusChip/StatusChip';
 import { usePublishDevto, useConfirmMedium } from './hooks/useArticles';
+import { copyText } from '@utils/clipboard';
 
 // dev.to (taslak/canli) ve Medium (dev.to canli olduktan sonra manuel import) yayin paneli.
 export default function PublishingPanel({ article, publications }) {
@@ -19,11 +20,14 @@ export default function PublishingPanel({ article, publications }) {
   const devto = publications.find((p) => p.publicationPlatform === 'devto');
   const medium = publications.find((p) => p.publicationPlatform === 'medium');
   // Medium import sayfasi ?url= parametresini artik doldurmuyor: dev.to adresini panoya kopyalayip sayfayi aciyoruz, kullanici yapistirir.
-  const openMediumImport = () => {
-    window.open('https://medium.com/p/import', '_blank', 'noopener,noreferrer');
+  // Kopyalama sekme ACILMADAN once yapilir: yeni sekme odagi alinca pano yazimi reddediliyordu (sessizce kopyalanmiyordu).
+  const openMediumImport = async () => {
     const url = devto?.publicationExternalUrl;
+    const copying = copyText(url);
+    window.open('https://medium.com/p/import', '_blank', 'noopener,noreferrer');
     if (!url) return;
-    navigator.clipboard?.writeText(url).then(() => enqueueSnackbar(t('publishing.mediumCopied'), { variant: 'success' }), () => {});
+    if (await copying) enqueueSnackbar(t('publishing.mediumCopied'), { variant: 'success' });
+    else enqueueSnackbar(t('publishing.mediumCopyFailed', { url }), { variant: 'warning', persist: true });
   };
   const canPublish = article.articleStatus === 'approved';
 

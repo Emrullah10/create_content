@@ -1,5 +1,5 @@
 import { describe, test, expect } from '@jest/globals';
-import { runQualityChecks, findUnsupportedNumbers, findDuplicateParagraphs, findBannedPhrases } from '../../../../../services/create-content-service-content/src/domain/article/quality-checks.js';
+import { runQualityChecks, findUnsupportedNumbers, findDuplicateParagraphs, findBannedPhrases, findLeftovers } from '../../../../../services/create-content-service-content/src/domain/article/quality-checks.js';
 import { verifyFacts, quoteInSource, buildBrief, allowedTextOf } from '../../../../../services/create-content-service-content/src/domain/research/facts.js';
 import { dedupKeyOf, canTransitionTopic } from '../../../../../services/create-content-service-content/src/domain/topic/topic-rules.js';
 import { nextStageAfter } from '../../../../../services/create-content-service-content/src/domain/pipeline/stages.js';
@@ -51,6 +51,20 @@ describe('tekrar ve klişe', () => {
     expect(findBannedPhrases('Let us delve into this.')).toContain('delve into');
     expect(findBannedPhrases('A concrete trade-off is latency.').length).toBe(1);
     expect(findBannedPhrases('Plain sentence.')).toEqual([]);
+  });
+});
+
+describe('unutulmuş işaretler', () => {
+  test('düz metinde TODO/FIXME ve yer tutucu yakalanır', () => {
+    expect(findLeftovers('Intro. TODO: finish this.\n\nlorem ipsum [...]')).toEqual(['TODO', 'lorem ipsum', '[...]']);
+  });
+  test('koddaki "todo" değeri ve küçük harfli kelime işaret değildir', () => {
+    const body = 'A todo list app.\n\n' + fence('tsx', '<option value="todo">To Do</option>\nconst TODO_STATUS = "todo";');
+    expect(findLeftovers(body)).toEqual([]);
+    expect(runQualityChecks({ body: goodBody() + '\n\n' + body }).errors.map((e) => e.id)).not.toContain('leftovers');
+  });
+  test('kodda yorum olarak TODO yakalanır', () => {
+    expect(findLeftovers(fence('js', 'run(); // TODO handle errors') + '\n\n' + fence('python', '# FIXME: retry'))).toEqual(['// TODO', '# FIXME']);
   });
 });
 

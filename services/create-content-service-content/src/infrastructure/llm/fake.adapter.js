@@ -81,6 +81,7 @@ export const makeFakeLlm = ({ recorder, overrides = {} } = {}) => {
     section: (r) => sectionText(r.meta || {}),
     'revise-section': (r) => r.meta?.body ?? sentence(120, 'rev'),
     editor: () => ({ issues: [] }),
+    improve: () => ({ issues: [] }),
     judge: () => ({
       technical_depth_reasoning: 'Two trade-offs and one failure scenario are described.', technical_depth: 4,
       structural_richness_reasoning: 'Diagrams, code and a table are present.', structural_richness: 4,

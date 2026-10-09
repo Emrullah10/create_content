@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Alert, Box, Card, Grid, Link, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { ArrowLeft, CheckCircle, Prohibit, Trash } from '@phosphor-icons/react';
+import { Alert, Box, Card, Grid, Link, Stack, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { ArrowLeft, CheckCircle, Prohibit, Sparkle, Trash } from '@phosphor-icons/react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MuiButton from '@components/MuiButton/MuiButton';
@@ -18,7 +18,7 @@ import QualityReport from './QualityReport';
 import PipelineTab from './PipelineTab';
 import SourcesTab from './SourcesTab';
 import PublishingPanel from './PublishingPanel';
-import { useAbandonArticle, useApproveArticle, useArticleDetail, useResumeArticle, useRetryAssets, useUpdateArticle } from './hooks/useArticles';
+import { useAbandonArticle, useApproveArticle, useArticleDetail, useImproveArticle, useResumeArticle, useRetryAssets, useUpdateArticle } from './hooks/useArticles';
 
 const EDITABLE = ['review', 'needs_assets', 'approved', 'failed'];
 
@@ -61,11 +61,12 @@ export default function ArticleDetailPage() {
   const approve = useApproveArticle(articleCode, { onDone: close });
   const retry = useRetryAssets(articleCode);
   const resume = useResumeArticle(articleCode);
+  const improve = useImproveArticle(articleCode);
   const abandon = useAbandonArticle(articleCode, { onDone: () => navigate(ROUTE_PATHS.articles) });
 
   if (isLoading) return <LoadingBlock />;
   if (error) return <ErrorAlert error={error} />;
-  const { article, assets, sources, publications, llmUsage, stages } = data;
+  const { article, improvable, assets, sources, publications, llmUsage, stages } = data;
   const status = article.articleStatus;
   const threshold = dash?.quality?.threshold ?? 75;
   const below = article.articleQualityScore !== null && article.articleQualityScore < threshold;
@@ -73,6 +74,12 @@ export default function ArticleDetailPage() {
   const actions = (
     <>
       {status === 'failed' && <MuiButton loading={resume.isPending} onClick={() => resume.mutate()}>{t('articles.resume')}</MuiButton>}
+      {['review', 'needs_assets'].includes(status) && (
+        // Otomatik iyilestirme calismadiysa aktif, calistiysa (ya da skor esigin ustundeyse) pasif: nedeni ipucunda.
+        <Tooltip title={improvable ? t('articles.improveHint') : t('articles.improveDisabledHint')}>
+          <span><MuiButton variant="outlined" startIcon={<Sparkle />} disabled={!improvable} loading={improve.isPending} onClick={() => improve.mutate()}>{t('articles.improve')}</MuiButton></span>
+        </Tooltip>
+      )}
       {status === 'needs_assets' && <MuiButton loading={retry.isPending} onClick={() => retry.mutate()}>{t('articles.retryAssets')}</MuiButton>}
       {status === 'review' && <MuiButton color="success" startIcon={<CheckCircle weight="fill" />} loading={approve.isPending} onClick={() => (below ? setDialog('override') : approve.mutate(false))}>{t('articles.approve')}</MuiButton>}
       {!['publishing', 'published'].includes(status) && <MuiButton variant="outlined" color="error" startIcon={<Trash />} onClick={() => setDialog('abandon')}>{t('articles.abandon')}</MuiButton>}

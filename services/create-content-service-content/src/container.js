@@ -78,12 +78,12 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
     draft: makeDraftSections(deps),
     check: makeCheckArticle({ ...deps, checkCode: checkMarkdownCode, linkChecker, thresholds: config.thresholds }),
     editor: makeEditArticle({ ...deps, checkCode: checkMarkdownCode, thresholds: config.thresholds, maxRounds: config.qualityMaxRounds }),
-    score: makeScoreArticle({ ...deps, samples: config.judgeSamples }),
+    score: makeScoreArticle({ ...deps, checkCode: checkMarkdownCode, samples: config.judgeSamples, threshold: config.qualityThreshold, improveRounds: config.qualityImproveRounds, thresholds: config.thresholds }),
     assets: makePrepareAssets({ ...deps, renderer: p.renderer, imageGenerator: p.imageGenerator, assetHost: p.assetHost }),
     final: makeFinalizeArticle(deps),
   };
   const pipeline = makeArticlePipeline({ stages: stagesRaw, articleRepo: repos.articleRepo });
-  const jobs = makeRunPipelineJob({ pipeline, topicRepo: repos.topicRepo, articleRepo: repos.articleRepo, jobRunRepo: repos.jobRunRepo, withLock, isLlmConfigured: llmConfigured });
+  const jobs = makeRunPipelineJob({ pipeline, topicRepo: repos.topicRepo, articleRepo: repos.articleRepo, jobRunRepo: repos.jobRunRepo, withLock, isLlmConfigured: llmConfigured, qualityThreshold: config.qualityThreshold });
 
   const themeRaw = { create: makeCreateTheme(deps), update: makeUpdateTheme(deps), toggle: makeToggleTheme(deps) };
   const topicRaw = {
@@ -96,7 +96,7 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
   };
   const articleRaw = {
     list: makeListArticles(deps),
-    get: makeGetArticle(deps),
+    get: makeGetArticle({ ...deps, qualityThreshold: config.qualityThreshold }),
     update: makeUpdateArticle(deps),
     approve: makeApproveArticle({ ...deps, qualityThreshold: config.qualityThreshold }),
     retryAssets: makeRetryAssets({ ...deps, prepareAssets: stagesRaw.assets, finalizeArticle: stagesRaw.final }),
@@ -113,6 +113,7 @@ export const buildContainer = ({ rawQueryFn = rawQuery, translateHttpErrors = tr
   const pipelineRaw = {
     runDaily: jobs.runDaily,
     resumeArticle: jobs.resumeArticle,
+    improveArticle: jobs.improveArticle,
     dashboard: makeGetDashboard({ ...deps, describeLlm, isLlmConfigured: llmConfigured, describePorts, config }),
   };
 

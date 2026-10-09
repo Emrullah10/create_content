@@ -10,7 +10,7 @@ export const makeGetDashboard = ({ articleRepo, topicRepo, jobRunRepo, describeL
     jobs,
     llm: { configured: isLlmConfigured(), roles: describeLlm() },
     ports: describePorts(),
-    quality: { threshold: config.qualityThreshold, maxRounds: config.qualityMaxRounds, judgeSamples: config.judgeSamples },
+    quality: { threshold: config.qualityThreshold, maxRounds: config.qualityMaxRounds, improveRounds: config.qualityImproveRounds, judgeSamples: config.judgeSamples },
     schedule: { dailyCron: config.dailyCron, timezone: config.timezone },
   };
 };

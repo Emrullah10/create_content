@@ -25,6 +25,7 @@ export default {
   articles: {
     title: 'Articles', subtitle: 'Every article waits here for your review. Nothing is published without your approval.', titleCol: 'Title', score: 'Score', stage: 'Stage', back: 'All articles', body: 'Markdown', approve: 'Approve', approvedMsg: 'Approved',
     approveAnyway: 'Approve anyway', overrideTitle: 'Below quality threshold', overrideMsg: 'The score is {{score}} and the threshold is {{threshold}}. Approve anyway?', belowThreshold: 'Score {{score}} is below the threshold {{threshold}}.',
+    improve: 'Re-score and improve', improveStarted: 'Re-scoring and improvement started', improveHint: 'Automatic improvement never ran for this article: it is re-scored blind and, if still below the threshold, revised from the judge feedback and scored again.', improveDisabledHint: 'Disabled: automatic improvement already ran or the score is above the threshold.',
     resume: 'Resume', retryAssets: 'Retry assets', assetsRetried: 'Assets retried', abandon: 'Discard', abandonTitle: 'Discard article', abandonMsg: 'The article is deleted. Put the topic back in the queue to write it again, or reject the topic.',
     abandonRewrite: 'Rewrite later', abandonDiscard: 'Reject topic too', abandoned: 'Article discarded', draftingNote: 'The article is being written; this page refreshes automatically.', needsAssets: '{{count}} image(s) failed. Retry them before approving.',
     editResets: 'Editing an approved article returns it to review.',
@@ -35,6 +36,8 @@ export default {
     checks: 'Automatic checks', passed: 'Passed', failed: 'Failed', code: 'Code validation', codeSummary: '{{total}} blocks, {{validated}} syntax-validated, {{failed}} failed (code is never executed)',
     links: 'Links', linksSummary: '{{total}} links, {{trusted}} from verified sources, {{broken}} broken', assets: 'Images', assetsSummary: '{{uploaded}}/{{diagrams}} diagrams uploaded, cover {{cover}}',
     editor: 'Editor rounds', editorRound: 'Round {{round}}: {{issues}} issue(s), {{changed}} section(s) rewritten',
+    improve: 'Automatic improvement (initial score {{initial}})', improveKept: 'Round {{round}}: {{changed}} section(s) rewritten, score {{before}} → {{after}} (kept)',
+    improveReverted: 'Round {{round}}: score {{before}} → {{after}}, not higher so the previous version was restored', improveNoop: 'Round {{round}}: no section to fix', improveError: 'Round {{round}}: failed ({{error}}), previous version kept',
     criteria: { technical_depth: 'Technical depth', structural_richness: 'Structure', clarity: 'Clarity', originality: 'Originality' },
     check: {
       'word-count': 'Length', sections: 'Sections', 'code-blocks': 'Code blocks', diagrams: 'Diagrams', table: 'Comparison table', 'unsupported-numbers': 'Unsourced figures', 'minor-numbers': 'Unsourced quantities',
@@ -46,7 +49,7 @@ export default {
   publishing: {
     needApproval: 'Approve the article first, then publish it here.', draft: 'Create dev.to draft', updateDraft: 'Update dev.to draft', live: 'Publish live', done: 'Done',
     devtoNote: 'Publishing is idempotent: the same article is never posted twice.', mediumWait: 'Medium opens after the article is live on dev.to.',
-    mediumSteps: 'Medium has no publishing API. Open the import page, import the live dev.to post (it keeps the canonical link), then paste the Medium URL here.', mediumOpen: 'Copy link and open Medium', mediumCopied: 'dev.to link copied: paste it into the Medium field', mediumUrl: 'Medium URL',
+    mediumSteps: 'Medium has no publishing API. Open the import page, import the live dev.to post (it keeps the canonical link), then paste the Medium URL here.', mediumOpen: 'Copy link and open Medium', mediumCopied: 'dev.to link copied: paste it into the Medium field', mediumCopyFailed: 'The browser blocked clipboard access. Copy this link manually: {{url}}', mediumUrl: 'Medium URL',
   },
   publications: { title: 'Publications', subtitle: 'Status per platform', retry: 'Retry failed', retried: 'Retry finished', sync: 'Sync with dev.to', synced: 'dev.to status synced', platform: 'Platform', link: 'Link', open: 'Open' },
   auth: { password: 'Password', login: 'Sign in', logout: 'Sign out' },
@@ -62,10 +65,10 @@ export default {
     ARTICLE_NOT_FOUND: 'Article not found.', ARTICLE_CODE_REQUIRED: 'Article is required.', ARTICLE_NOTHING_TO_UPDATE: 'Nothing to update.', ARTICLE_TITLE_REQUIRED: 'Title cannot be empty.', ARTICLE_BODY_REQUIRED: 'Body cannot be empty.',
     ARTICLE_NOT_EDITABLE: 'This article cannot be edited in its current status.', ARTICLE_NEEDS_ASSETS: 'Retry the failed images before approving.', ARTICLE_BELOW_THRESHOLD: 'The quality score is below the threshold.',
     ARTICLE_NOT_APPROVABLE: 'Only articles in review can be approved.', ARTICLE_NOT_RETRYABLE: 'Images can only be retried for articles that need assets.', ARTICLE_NOT_DELETABLE: 'Published articles cannot be discarded.',
-    ARTICLE_NOT_RESUMABLE: 'Only failed or interrupted articles can be resumed.', ARTICLE_NOT_DRAFTING: 'The pipeline can only run for articles being written.',
+    ARTICLE_NOT_RESUMABLE: 'Only failed or interrupted articles can be resumed.', ARTICLE_NOT_IMPROVABLE: 'Only below-threshold articles that were never auto-improved can be improved.', ARTICLE_NOT_DRAFTING: 'The pipeline can only run for articles being written.',
     PUBLISH_MODE_INVALID: 'Publish mode must be draft or live.', ARTICLE_NOT_PUBLISHABLE: 'Only approved articles can be published.', ARTICLE_NOT_PUBLISHED: 'Publish live on dev.to first.', MEDIUM_URL_INVALID: 'Enter a valid https://medium.com/... address.',
     PUBLISH_FAILED: 'Publishing to dev.to failed. It can be retried safely.',
     LLM_NOT_CONFIGURED: 'No LLM is configured. Set LLM_WRITER_* in .env and restart.', PORT_NOT_CONFIGURED: 'A required integration is not configured (check .env).',
-    LLM_TRUNCATED: 'The model output was cut off.', LLM_INVALID_JSON: 'The model returned an invalid answer.', LLM_EMPTY_RESPONSE: 'The model returned an empty answer.',
+    LLM_UPSTREAM_FAILED: 'The LLM provider timed out or returned an error. Try again shortly; if it persists run `npm run check:llm` to verify the models.', LLM_TRUNCATED: 'The model output was cut off.', LLM_INVALID_JSON: 'The model returned an invalid answer.', LLM_EMPTY_RESPONSE: 'The model returned an empty answer.',
   },
 };

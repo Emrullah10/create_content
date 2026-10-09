@@ -93,8 +93,9 @@ export const makeOpenAiCompatibleAdapter = ({ roles, clientFactory = (cfg) => ne
             }
           },
           {
-            attempts: 4,
-            baseDelayMs: 2000,
+            // Saglayici yogunlugu (503/429) saniyelerle gecmez: 5+10+20+40+80 sn = ~2.5 dk bekleyip pes eder (yarim kalan makale failed olmasin).
+            attempts: 6,
+            baseDelayMs: 5000,
             shouldRetry: retryable,
             delayMs: (err) => parseRetryAfter(err?.headers?.['retry-after']) ?? undefined,
             sleep,

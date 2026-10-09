@@ -1,17 +1,63 @@
 **/node_modules
 *.log
-.DS_Store
 .worktrees/
+
+# OS & Filesystem Dotfiles
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+
+# Shell & Temp Dotfiles / Caches
+.*_history
+.bash_*
+.zsh_*
+.eslintcache
+.prettiercache
+.stylelintcache
+.cache/
+.temp/
+.tmp/
+
+# IDE & Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+.*.swp
+.*.swo
+*~
+.fleet/
+.zed/
+.history/
+
+# Cursor Local Data
+.cursor/
+.cursorrules*
 
 # env ve sirlar
 .env
 .env.*
+.env.local
+.env.*.local
+*.env
+*.env.*
 !.env.example
 !.env.test.example
 !create-content-web-app/.env.example
 .env.generated.json
 secrets/
 *.pem
+*.key
+*.cert
+*.crt
 
 # uretilen ciktilar / yerel veri
 db-schemas/_combined.sql
@@ -28,7 +74,27 @@ __pycache__/
 uploads/
 
 # AI katmani: kisisel ve makineye yerel dosyalar
+.claude/
+.claude*
+CLAUDE.md
+CLAUDE*.md
+claude*
+.wolf/
+.wolf*
+OPENWOLF.md
+*wolf*.md
+.codex/
+.codex*
 .codegraph/
-.vscode/launch.json
-e2e/playwright-report/
-e2e/test-results/
+.codegraph*
+.gemini/
+.gemini*
+GEMINI.md
+.agents/
+AGENTS.md
+.antigravity/
+.cline/
+.roo/
+.chatgpt/
+.copilot/
+

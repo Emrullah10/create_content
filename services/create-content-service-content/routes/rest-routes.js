@@ -28,4 +28,5 @@ export default {
   postPublicationsRetry: wrap(h.retryPublicationsHandler),
   postPipelineRun: wrap(h.pipelineRunHandler),
   postPipelineResume: wrap(h.pipelineResumeHandler),
+  postPipelineImprove: wrap(h.pipelineImproveHandler),
 };

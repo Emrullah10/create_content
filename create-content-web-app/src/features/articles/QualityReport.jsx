@@ -10,7 +10,12 @@ const CheckIcon = ({ item }) => (item.ok ? <CheckCircle color="#2e7d32" weight="
 export default function QualityReport({ report }) {
   const { t } = useTranslation();
   if (!report) return <Alert severity="info">{t('report.none')}</Alert>;
-  const { judge, checks, code, links, assets, editorRounds = [] } = report;
+  const { judge, checks, code, links, assets, editorRounds = [], improveRounds = [] } = report;
+  const improveLine = (r) => {
+    if (r.error) return t('report.improveError', { round: r.round, error: r.error });
+    if (r.after === undefined) return t('report.improveNoop', { round: r.round });
+    return t(r.kept ? 'report.improveKept' : 'report.improveReverted', { round: r.round, changed: r.changed?.length ?? 0, before: r.before, after: r.after });
+  };
 
   return (
     <Grid container spacing={2}>
@@ -83,6 +88,12 @@ export default function QualityReport({ report }) {
             <Card variant="outlined"><CardContent>
               <Typography variant="subtitle1" fontWeight={700}>{t('report.editor')}</Typography>
               {editorRounds.map((r) => <Typography key={r.round} variant="body2">{t('report.editorRound', { round: r.round, issues: r.issues, changed: r.changed?.length ?? 0 })}</Typography>)}
+            </CardContent></Card>
+          )}
+          {improveRounds.length > 0 && (
+            <Card variant="outlined"><CardContent>
+              <Typography variant="subtitle1" fontWeight={700}>{t('report.improve', { initial: report.initialScore })}</Typography>
+              {improveRounds.map((r) => <Typography key={r.round} variant="body2">{improveLine(r)}</Typography>)}
             </CardContent></Card>
           )}
         </Stack>

@@ -33,6 +33,7 @@ Biçim: `[YYYY-MM-DD] Karar — gerekçe — nasıl geri alınır`. Mimari kayna
 - [2026-10-05] Asset'ler diske yazılmadan render→yükle akışıyla işlenir (tmp dosya yok); yeniden deneme yalnız `uploaded` olmayanları işler — eski tmp-dizin hatası kökten kalktı.
 - [2026-10-05] E2E Docker'sız: ayrı DB (`create_content_e2e`), ayrı portlar (3199/5275), LLM_PROVIDER=fake; Playwright puppeteer'ın Chrome'unu kullanır.
 - [2026-10-05] CI'da E2E yok (Chrome gerektirir); lint + web + backend (postgres:15) + build koşar.
+- [2026-10-06] Skor eşiğin altındaysa skor aşaması kendi içinde iyileştirme turu koşar (QUALITY_IMPROVE_ROUNDS, varsayılan 2): hakem eleştirisi `improve` çağrısıyla bölüm görevlerine çevrilir, bölümler yeniden yazılır, makale yeniden kör puanlanır; puan artmazsa bölümler geri alınır. Yeni pipeline aşaması/enum eklenmedi (resume semantiği değişmesin diye).
 
 ## BEKLİYOR
 - Sunucuya taşıma ve auth katmanı.

@@ -8,4 +8,5 @@ export default {
   retryArticleAssets: (code) => http.post(`/v1/articles/${code}/retry-assets`).then(unwrap),
   abandonArticle: (code, rewrite = false) => http.post(`/v1/articles/${code}/abandon`, { rewrite }).then(unwrap),
   resumeArticle: (code) => http.post(`/v1/pipeline/articles/${code}/resume`).then(unwrap),
+  improveArticle: (code) => http.post(`/v1/pipeline/articles/${code}/improve`).then(unwrap),
 };

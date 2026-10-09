@@ -1,4 +1,4 @@
-import { countCodeBlocks, countDiagramBlocks, extractPlaceholders, h2Headings, hasTable, proseOf, wordCount } from './markdown.js';
+import { countCodeBlocks, countDiagramBlocks, extractPlaceholders, h2Headings, hasTable, parseCodeBlocks, proseOf, wordCount } from './markdown.js';
 
 export const DEFAULT_THRESHOLDS = Object.freeze({
   minWords: 1400,
@@ -64,6 +64,15 @@ export const findDuplicateParagraphs = (body) => {
   return dups;
 };
 
+// Unutulmus isaretler: duz metinde BUYUK harfli TODO/FIXME, kodda yalniz YORUM olarak (`// TODO`, `# FIXME`).
+// Kod icindeki `value="todo"` gibi bir deger isaret degildir (eski kontrol bunu yakalayip puani tavana kirpiyordu).
+const CODE_LEFTOVER = /(?:\/\/|#|\/\*|--|<!--)\s*(?:TODO|FIXME)\b/g;
+export const findLeftovers = (body) => {
+  const prose = proseOf(body);
+  const code = parseCodeBlocks(body).filter((b) => b.lang !== 'mermaid').map((b) => b.code).join('\n');
+  return [...prose.matchAll(/\bTODO\b|\bFIXME\b/g), ...prose.matchAll(/\[\.\.\.\]|lorem ipsum/gi), ...code.matchAll(CODE_LEFTOVER)].map((m) => m[0].trim());
+};
+
 export const findBannedPhrases = (body) => {
   const text = proseOf(body).toLowerCase();
   const hits = BANNED_PHRASES.filter((p) => text.includes(p));
@@ -83,7 +92,7 @@ export const runQualityChecks = ({ body, allowedText = '', thresholds = {} }) =>
   const strong = unsupported.filter((u) => u.strong);
   const dups = findDuplicateParagraphs(body);
   const banned = findBannedPhrases(body);
-  const leftovers = [...body.matchAll(/\bTODO\b|\bFIXME\b|\[\.\.\.\]|lorem ipsum/gi)].map((m) => m[0]);
+  const leftovers = findLeftovers(body);
   const stray = [...body.matchAll(/\{\{(?!DIAGRAM_\d+\}\})[^}]*\}\}/g)].map((m) => m[0]);
 
   const checks = [
